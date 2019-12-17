@@ -6,9 +6,11 @@
     <h2 class="subtitle"></h2>
     <div class="row">
         <div class="col-md-2">
-            <form action="#">
-                <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
-            </form> 
+            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+                <form action="#">
+                    <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
+                </form>
+            {% endif %}
         </div>
     </div>
     <div class="row">

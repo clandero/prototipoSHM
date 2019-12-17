@@ -17,11 +17,13 @@
                 <tr>
                     <td>{{i.nombre_zona}}</td>
                     <td>{{i.material}}</td>
-                    <td>
-                        <form action="{{url_for('views_api.daqs_de_zona',id_zona=i.id)}}">
-                            <button class="btn btn-secondary btn-sm" type="submit" id="daqs" value="{{i.id}}">DAQs</button>
-                        </form>
-                    </td>
+                    {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' %}
+                        <td>
+                            <form action="{{url_for('views_api.daqs_de_zona',id_zona=i.id)}}">
+                                <button class="btn btn-secondary btn-sm" type="submit" id="daqs" value="{{i.id}}">DAQs</button>
+                            </form>
+                        </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

@@ -33,23 +33,37 @@
                     <button class="btn btn-secondary btn-sm">Lista de Sensores</button>
                 </form>
             </div>                 
-            <div class="col col-md-2 col-sm-2 text-center">
-                <form action="{{url_for('views_api.historial_monitoreo_estructura', id=datos_puente.id)}}">
-                    <button class="btn btn-secondary btn-sm">Historial de monitoreo</button>
-                </form>
-            </div>
-            <div class="col col-md-1 col-sm-1 text-center">
-                <form action="{{url_for('views_api.daqs_de_estructura', id_puente=datos_puente.id)}}">
-                    <button class="btn btn-secondary btn-sm">DAQs</button>
-                </form>
-            </div> 
+            {% if current_user.permisos != 'Visita' %}
+                <div class="col col-md-2 col-sm-2 text-center">
+                    <form action="{{url_for('views_api.historial_monitoreo_estructura', id=datos_puente.id)}}">
+                        <button class="btn btn-secondary btn-sm">Historial de monitoreo</button>
+                    </form>
+                </div>
+                <div class="col col-md-1 col-sm-1 text-center">
+                    <form action="{{url_for('views_api.daqs_de_estructura', id_puente=datos_puente.id)}}">
+                        <button class="btn btn-secondary btn-sm">DAQs</button>
+                    </form>
+                </div>
+                <div class="col col-md-1 col-sm-1 text-center">
+                    <form action="{{url_for('views_api.clusters_estructura', id_puente=datos_puente.id)}}">
+                        <button class="btn btn-secondary btn-sm">Clusters</button>
+                    </form>
+                </div>  
+            {% endif %}
         {% else %}
-            <div class="col col-md-2 col-sm-2 text-center">
-                <form action="{{ url_for('views_api.crear_monitoreo', id_puente=datos_puente.id) }}", method="POST">
-                    <button class="btn btn-secondary btn-sm">Iniciar Monitoreo</button>
-                </form>
-            </div> 
+            {% if current_user.permisos == 'Administrador' %}
+                <div class="col col-md-2 col-sm-2 text-center">
+                    <form action="{{ url_for('views_api.crear_monitoreo', id_puente=datos_puente.id) }}", method="POST">
+                        <button class="btn btn-secondary btn-sm">Iniciar Monitoreo</button>
+                    </form>
+                </div>
+            {% endif %} 
         {% endif %}
+    </div>
+    <div class="row">
+        <br>
+        <br>
+        <br>
     </div>
     <div class="row">
         <div class="col-md-6">

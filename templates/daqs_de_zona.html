@@ -5,12 +5,15 @@
     <h1 class="title">DAQs de {{nombre_zona}} en {{tipo_activo}} {{nombre_puente}}</h1>
     <h2 class="subtitle"></h2>
     <div class="row">
-        <div class="col-md-2">
-            <form action="#">
-                <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
-            </form> 
-        </div>
+        {% if current_user.permisos == 'Administrador' %}
+            <div class="col-md-2">
+                <form action="#">
+                    <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
+                </form> 
+            </div>
+        {% endif %}
     </div>
+
     <div class="row">
         <table class="table table-hover clickable-row sortable">
             <thead>

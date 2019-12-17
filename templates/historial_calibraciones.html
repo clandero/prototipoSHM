@@ -5,9 +5,11 @@
     <h1 class="title">Calibraciones de {{tipo_sensor}} N° {{id_sensor}}</h1>
     <div class="row">
         <div class="col col-md-2 col-sm-2 text-center">
-            <form action="{{url_for('views_api.nueva_calibracion',x=id_sensor)}}">
-                <button class="btn btn-secondary btn-sm">Nueva Calibración</button>
-            </form>
+            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+                <form action="{{url_for('views_api.nueva_calibracion',x=id_sensor)}}">
+                    <button class="btn btn-secondary btn-sm">Nueva Calibración</button>
+                </form>
+            {% endif %}
         </div>                
     </div>
     <div class="row">
