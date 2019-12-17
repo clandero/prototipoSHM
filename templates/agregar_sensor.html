@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Añadir sensor en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
+    <div class="box">
+        <form action="{{url_for('views_api.agregar_sensor_en_post')}}" method="POST">
+            <!--Zona del puente-->
+            <div class="field">
+                <select class="form-control" id="zona_puente" name="zona_puente">
+                    <option value="" style="display:none;">Zona a instalar</option>
+                    {% for i in zonas_puente %}
+                        <option value="{{ i[0] }}">{{ i[1] }}</option>
+                    {% endfor %}
+                </select>    
+            </div>
+            <!--DAQs disponibles-->
+            <div class="field">
+                <select class="form-control" id="daqs_disponibles" name="daqs_disponibles">
+                    <option value="" style="display:none;">Conexiones disponibles (DAQ, Canal)</option>
+                    {% for i in conexiones %}
+                        <option value="{{ i.id }}">({{i.id_daq}},{{i.numero_canal}})</option>  
+                    {% endfor %}
+                </select>    
+            </div>
+            <!--Tipo de sensor-->
+            <div class="field">
+                <select class="form-control" id="tipo_sensor" name="tipo_sensor">
+                    <option value="" style="display:none;">Tipo de sensor</option>
+                    {% for i in tipos_sensores %}
+                        <option value="{{ i['id']}}">{{ i['nombre']}}</option>  
+                    {% endfor %}
+                </select>    
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input" type="text" name="frecuencia" placeholder="Frecuencia">
+                </div>
+            </div>
+            
+            <button class="button is-block is-info is-fullwidth">Crear conexión</button>
+        </form>    
+    </div>
+</div>
+{% endblock %}

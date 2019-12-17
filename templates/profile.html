@@ -1,0 +1,12 @@
+<!-- templates/profile.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="title">
+  Bienvenido, {{ current_user.nombre }} {{ current_user.apellido }}!
+</h1>
+<h2 class="subtitle">
+  Permisos: {{ current_user.permisos }}
+</h2>
+{% endblock %}

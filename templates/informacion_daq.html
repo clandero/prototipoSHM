@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">
+        DAQ N° {{ info_daq.id }} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}
+    </h1>
+    <h4 class="subtitle">
+        Descripción: {{ info_daq.caracteristicas }}
+    </h4>
+    <h4 class="subtitle">
+        Estado actual: {{ estado_actual.detalles }} - {{estado_actual.fecha_estado}}
+    </h4>
+    
+    <div class="row">
+        <div class="col col-md-1 col-sm-1 text-center">
+            <form action="{{url_for('views_api.revisiones_daq',id_daq=info_daq.id)}}">
+                <button class="btn btn-secondary btn-sm">Revisiones</button>
+            </form>
+        </div>    
+        <div class="col col-md-2 col-sm-2 text-center">
+            <form action="{{url_for('views_api.historial_daq',id_daq=info_daq.id)}}">
+                <button class="btn btn-secondary btn-sm">Historial de estado</button>
+            </form>
+        </div>                 
+    </div>
+    <div class="row">
+        <br>
+        
+    </div>
+    <div class="row">
+        <h2 class="subtitle">Canales: {{info_daq.nro_canales}}</h2>
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>N° canal</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in canales %}
+                <tr>
+                    <td>{{ i[1] }}</td>
+                    {% if i[3] == True%}
+                        <td>Ocupado</td>
+                    {% else %}
+                        <td>Disponible</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

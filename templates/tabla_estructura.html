@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" />
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"></script>
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<style>
+    #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+</style>
+<div class="container">
+    <h1 class="title">
+        {{datos_puente.tipo_activo}} {{ datos_puente.nombre.capitalize() }}
+    </h1>
+    <h4 class="subtitle">
+        Estado de monitoreo: {{estado_monitoreo.estado}} - {{estado_monitoreo.fecha_estado}}
+    </h4>
+    <div class="row">
+        {% if esta_monitoreada %}
+            <div class="col col-md-1 col-sm-1 text-center">
+                <form action="{{url_for('views_api.zonas_de_estructura', id=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Zonas</button>
+                </form>
+            </div>    
+            <div class="col col-md-2 col-sm-2 text-center">
+                <form action="{{url_for('views_api.sensores_de_estructura', id=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Lista de Sensores</button>
+                </form>
+            </div>                 
+            <div class="col col-md-2 col-sm-2 text-center">
+                <form action="{{url_for('views_api.historial_monitoreo_estructura', id=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Historial de monitoreo</button>
+                </form>
+            </div>
+            <div class="col col-md-1 col-sm-1 text-center">
+                <form action="{{url_for('views_api.daqs_de_estructura', id_puente=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">DAQs</button>
+                </form>
+            </div> 
+        {% else %}
+            <div class="col col-md-2 col-sm-2 text-center">
+                <form action="{{ url_for('views_api.crear_monitoreo', id_puente=datos_puente.id) }}", method="POST">
+                    <button class="btn btn-secondary btn-sm">Iniciar Monitoreo</button>
+                </form>
+            </div> 
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-hover clickable-row sortable">
+                <thead>
+                    <tr>
+                        <th>Ubicación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Camino</td>
+                        <td>{{ datos_puente.nombre_camino }}</td>
+                    </tr>
+                    <tr>
+                        <td>Cauce de quebrada</td>
+                        <td>{{ datos_puente.cauce_queb }}</td>
+                    </tr>
+                    <tr>
+                        <td>Provincia</td>
+                        <td>{{ datos_puente.provincia }}</td>
+                    </tr>
+                    <tr>
+                        <td>Región</td>
+                        <td>{{ datos_puente.region }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <div id="map">
+                <script>
+                    function onMapClick(e) {
+                        popup.setLatLng(e.latlng);
+                        popup.setContent("Has pulsado en Lat=" + e.latlng.lat + " Long=" + e.latlng.lng);
+                        popup.openOn(map);
+                    }
+                    
+                    //var osmLayer = new L.TileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=zZkrANgINoCERa0zI6td');
+                    var ESRIWorldImageryLayer = new L.TileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+        
+                    var baseMaps = {
+                        'ESRI World Imagery': ESRIWorldImageryLayer
+                    };
+        
+                    var layerControl = new L.control.layers(baseMaps);
+                    var map = L.map('map');
+                    map.setView(new L.LatLng('{{datos_puente.coord_x}}','{{datos_puente.coord_y}}'),17);
+                    map.addControl(layerControl);    
+                    map.addLayer(ESRIWorldImageryLayer);
+        
+                    var popup = new L.popup();
+                    var marker = L.marker(['{{datos_puente.coord_x}}','{{datos_puente.coord_y}}']).addTo(map);
+                    map.on('click', onMapClick);
+                </script>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6">
+            <table class="table table-hover clickable-row sortable">
+                <thead>
+                    <tr>
+                        <th>Características</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Largo</td>
+                        <td>{{ datos_puente.largo }} metros</td>
+                    </tr>
+                    <tr>
+                        <td>Ancho total</td>
+                        <td>{{ datos_puente.ancho_total }} metros</td>
+                    </tr>
+                    <tr>
+                        <td>Estribo</td>
+                        <td>{{ datos_puente.mat_estrib }}</td>
+                    </tr>
+                    <tr>
+                        <td>Cepas</td>
+                        {% if datos_puente.num_cepas > 0 %}
+                            {% if datos_puente.mat_cepas != 'N/A' and datos_puente.mat_cepas != 'S/I'%}    
+                                <td>{{ datos_puente.num_cepas|int }} cepa(s) de {{ datos_puente.mat_cepas }}</td>
+                            {% else %}
+                                <td>{{datos_puente.num_cepas|int}} cepa(s)</td>
+                            {% endif %}
+                        {% else %}
+                            <td>{{datos_puente.mat_cepas}}</td>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <td>Piso</td>
+                        <td>{{ datos_puente.piso }}</td>
+                    </tr>
+                    <tr>
+                        <td>Vigas</td>
+                        <td>{{ datos_puente.mat_vigas }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-sm-6">
+            <br><br><br><br>
+            <h1 align="center">Visualización 2D/3D</h1>
+        </div>
+    </div>
+</div>
+{% endblock %}

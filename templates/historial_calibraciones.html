@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Calibraciones de {{tipo_sensor}} N° {{id_sensor}}</h1>
+    <div class="row">
+        <div class="col col-md-2 col-sm-2 text-center">
+            <form action="{{url_for('views_api.nueva_calibracion',x=id_sensor)}}">
+                <button class="btn btn-secondary btn-sm">Nueva Calibración</button>
+            </form>
+        </div>                
+    </div>
+    <div class="row">
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Detalles</th>
+                    <th>Ubicación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in calibraciones %}
+                <tr>
+                    <td>{{i.fecha_calibracion}}</td>
+                    <td>{{i.detalles}}</td>
+                    <td>{{i.descripcion}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

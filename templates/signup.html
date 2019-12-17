@@ -1,0 +1,59 @@
+<!-- templates/signup.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Registrarse</h3>
+    <div class="box">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="notification is-danger">
+                {{ messages[0] }}. Go to <a href="{{ url_for('views_api.login') }}">login page</a>.
+            </div>
+        {% endif %}
+        {% endwith %}
+        <form method="POST" action="/signup">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="firstname" placeholder="Nombre" autofocus="">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="lastname" placeholder="Apellido">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="mail" placeholder="Correo">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" name="password" placeholder="Contraseña">
+                </div>
+            </div>
+            <div class="field">
+                <select class="form-control" id="permisos" name="permisos">
+                    <option value="" style="display:none;">Permisos</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Dueño">Dueño</option>
+                    <option value="Analista">Analista</option>
+                    <option value="Visita">Visita</option>
+                  </select>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Registrarse</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    $(function(){
+        $(".dropdown-menu a").click(function(){
+            $(".btn:first-child").text($(this).text());
+            $(".btn:first-child").val($(this).text());
+        });
+    });
+</script>
+{% endblock %}

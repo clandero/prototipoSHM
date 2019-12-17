@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Nueva revisión de DAQ N° {{id_daq}} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
+    <div class="box">
+        <form action="{{url_for('views_api.actualizar_revision_daq_post',id_daq=id_daq)}}" method="POST">
+            <!--Nueva revisión-->
+            <div class="field">
+                <div class="control">
+                    <input class="input" type="text" name="nueva_revision" placeholder="Nueva revisión">
+                </div>
+            </div>
+            <button class="button is-block is-info is-fullwidth">Actualizar</button>
+        </form>    
+    </div>
+</div>
+{% endblock %}

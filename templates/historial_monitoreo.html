@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Historial de monitoreo en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
+    <div class="row">
+        <div class="col col-md-2 col-sm-2 text-center">
+            <form action="{{url_for('views_api.actualizar_estado_monitoreo',id=id_puente)}}">
+                <button class="btn btn-secondary btn-sm">Actualizar Estado</button>
+            </form>
+        </div>                
+    </div>
+    <div class="row">
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Condición</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in estados_monitoreo %}
+                <tr>
+                    <td>{{i.fecha_estado}}</td>
+                    <td>{{i.estado}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
