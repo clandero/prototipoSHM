@@ -634,3 +634,55 @@ def sensores_de_grupo(id):
         return render_template('sensores_de_grupo.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/eliminar_grupo/<int:id>', methods=['POST'])
+@login_required
+def eliminar_grupo(id):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        sensores_a_eliminar = SensorPorGrupoDefinido.query.filter_by(id_grupo = id).delete()
+        grupo_a_eliminar = GrupoDefinidoUsuario.query.filter_by(id = id).delete()
+        db.session.commit()
+        return redirect(url_for('views_api.grupos_usuario'))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/editar_grupo/<int:id>', methods=['GET','POST'])
+@login_required
+def editar_grupo(id):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        if(request.method == 'GET'):
+            sensores_del_grupo = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id == SensorPorGrupoDefinido.id_sensor_instalado, SensorPorGrupoDefinido.id_grupo == GrupoDefinidoUsuario.id, GrupoDefinidoUsuario.id == id).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
+            sensores_disponibles = sensores = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
+            nombre_grupo = db.session.query(GrupoDefinidoUsuario.nombre).filter_by(id = id).first().nombre
+            print(nombre_grupo)
+            context = {
+                'id_grupo' : id,
+                'nombre_grupo' : nombre_grupo, 
+                'sensores_disponibles' : sensores_disponibles,
+                'sensores_del_grupo' : sensores_del_grupo
+            }
+            return render_template('actualizar_grupo_definido_usuario.html',**context)
+        elif(request.method == 'POST'):
+            inicial_query = SensorPorGrupoDefinido.query.filter_by(id_grupo = id).all()
+            inicial_lista = [(i.id_sensor_instalado, i.id_grupo) for i in inicial_query] 
+            #print(inicial_lista)
+            final_query = request.form.getlist('sensores_elegidos')
+            final_lista = [(int(i), id) for i in final_query]
+            #print(final_lista)
+            #remover elementos
+            for i in inicial_lista:
+                if i not in final_lista:
+                    print(str(i)+' removido')
+                    x = SensorPorGrupoDefinido.query.filter_by(id_sensor_instalado = i[0], id_grupo=i[1]).delete()
+            #añadir elementos
+            for i in final_lista:
+                if i not in inicial_lista:
+                    print(str(i)+' añadido')
+                    y = SensorPorGrupoDefinido(id_sensor_instalado = i[0], id_grupo = i[1], fecha_creacion = datetime.now())
+                    db.session.add(y)
+            db.session.commit()
+            return redirect(url_for('views_api.grupos_usuario'))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))

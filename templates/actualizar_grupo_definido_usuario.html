@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Actualizar grupo de sensores "{{nombre_grupo}}"</h1>
+    <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
+    <br>
+    <div class="row">
+        <div class="column is-12">
+            <form action="{{url_for('views_api.editar_grupo',id=id_grupo)}}" method="POST">
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" value="{{nombre_grupo}}" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <table class="table table-hover clickable-row sortable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Tipo de sensor</th>
+                                    <th>Estructura</th>
+                                    <th>Zona</th>                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in sensores_disponibles %}
+                                    {% if i.es_activo == True %}
+                                        <tr>
+                                            <td>
+                                                <label class="checkbox">
+                                                    {% if i in sensores_del_grupo %}
+                                                        <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}" checked>
+                                                    {% else %}
+                                                        <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}">
+                                                    {% endif %}
+                                                </label>
+                                            </td>
+                                            <td>{{i.tipo_sensor}}</td>
+                                            <td>{{i.tipo_activo}} {{i.nombre}}</td>
+                                            <td>{{i.descripcion}}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>        
+                        </table>
+                    </div>
+                </div>
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" class="button is-block is-info is-fullwidth">Actualizar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
