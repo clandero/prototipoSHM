@@ -283,9 +283,11 @@ class GrupoDefinidoUsuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
     id_usuario = db.Column(db.String(100), db.ForeignKey('inventario_puentes.usuarios.id'))    
+    fecha_creacion = db.Column(db.DateTime)
     
 class SensorPorGrupoDefinido(db.Model):
     __tablename__ = 'sensores_grupos_definidos_por_usuario'
     __table_args__ = {'schema':'inventario_puentes'}    
     id_sensor_instalado = db.Column(db.Integer, db.ForeignKey('inventario_puentes.sensores_instalados.id'),primary_key=True)
     id_grupo = db.Column(db.Integer, db.ForeignKey('inventario_puentes.grupos_definidos_por_usuario.id'),primary_key=True)
+    fecha_creacion = db.Column(db.DateTime)

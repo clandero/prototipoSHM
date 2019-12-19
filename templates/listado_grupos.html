@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Sus grupos definidos</h1>
+    <h2 class="subtitle"></h2>
+    <div class="row">
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Fecha de creación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in grupos %}
+                <tr>
+                    <td>{{i.nombre}}</td>
+                    <td>{{i.fecha_creacion}}</td>
+                    <td>
+                        <form action="#">
+                            <button class="btn btn-primary btn-sm" type="submit" id="detalles" value="{{i.id}}">Detalles</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="#">
+                            <button class="btn btn-secondary btn-sm" type="submit" id="editar" value="{{i.id}}">Editar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="#">
+                            <button class="btn btn-danger btn-sm" type="submit" id="eliminar" value="{{i.id}}">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

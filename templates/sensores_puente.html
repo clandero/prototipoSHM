@@ -4,15 +4,22 @@
 <div class="container">
     <h1 class="title">Sensores de {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
     <h2 class="subtitle"></h2>
+    <br>
     <div class="row">
-        <div class="col-md-2">
-            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+        {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+            <div class="col col-md-2 col-sm-2 text-center">
                 <form action="{{url_for('views_api.agregar_sensor_en', id=id_puente)}}">
                     <button class="btn btn-secondary btn-sm">Añadir nuevo sensor</button>
                 </form>
-            {% endif %} 
-        </div>
+            </div>
+            <div class="col col-md-3 col-sm-3 text-center">
+                <form action="#">
+                    <button class="btn btn-secondary btn-sm">Definir grupo de sensores</button>
+                </form>
+            </div>
+        {% endif %} 
     </div>
+    <br>
     <div class="row">
         <table class="table table-hover clickable-row sortable">
             <thead>

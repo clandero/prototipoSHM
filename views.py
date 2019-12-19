@@ -581,3 +581,56 @@ def actualizar_estado_sensor_post(id_sensor):
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
+#PERMISOS = Administrador, analista
+@views_api.route('/grupo_definido_usuario', methods=['GET','POST'])
+@login_required
+def grupo_definido_usuario():
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        if(request.method == 'GET'):
+            sensores = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
+            context = {
+                'sensores' : sensores
+            }
+            return render_template('grupo_definido_usuario.html',**context)
+        elif(request.method == 'POST'):
+            nombre = request.form.get('nombre_grupo')
+            sensores = request.form.getlist('sensores_elegidos')
+            nuevo_grupo = GrupoDefinidoUsuario(nombre=nombre, id_usuario=current_user.id, fecha_creacion=datetime.now())
+            db.session.add(nuevo_grupo)
+            db.session.flush()
+            for i in sensores:
+                x = SensorPorGrupoDefinido(id_sensor_instalado=i, id_grupo=nuevo_grupo.id, fecha_creacion=datetime.now())
+                db.session.add(x)
+            db.session.commit()
+            return redirect(url_for('views_api.grupos_usuario'))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/grupos_usuario')
+@login_required
+def grupos_usuario():
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        grupos = GrupoDefinidoUsuario.query.filter_by(id_usuario = current_user.id).all()
+        context = {
+            'grupos' : grupos
+        }
+        return render_template('listado_grupos.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/sensores_de_grupo/<int:id>')
+@login_required
+def sensores_de_grupo(id):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        sensores = db.session.query(TipoSensor.nombre.label('tipo_sensor'), ZonaEstructura.descripcion, Estructura.tipo_activo, Estructura.nombre, SensorInstalado.id, SensorInstalado.id_sensor, SensorInstalado.nombre_tabla, SensorPorGrupoDefinido.fecha_creacion).filter(GrupoDefinidoUsuario.id == SensorPorGrupoDefinido.id_grupo, SensorInstalado.id == SensorPorGrupoDefinido.id_sensor_instalado, Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, ZonaEstructura.id == SensorInstalado.id_zona, Estructura.id == SensorInstalado.id_estructura, GrupoDefinidoUsuario.id == id).all()
+        print(sensores)
+        nombre_grupo = db.session.query(GrupoDefinidoUsuario.nombre).filter(GrupoDefinidoUsuario.id == id).first().nombre
+        context = {
+            'nombre_grupo':nombre_grupo,
+            'sensores':sensores
+        }
+        return render_template('sensores_de_grupo.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))

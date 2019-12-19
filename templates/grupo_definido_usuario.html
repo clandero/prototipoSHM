@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Definir un grupo de sensores</h1>
+    <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
+    <br>
+    <div class="row">
+        <div class="column is-12">
+            <form action="{{url_for('views_api.grupo_definido_usuario')}}" method="POST">
+                <div class="field">
+                    <div class="control">
+                        <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <table class="table table-hover clickable-row sortable">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Tipo de sensor</th>
+                                    <th>Estructura</th>
+                                    <th>Zona</th>                    
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i in sensores %}
+                                    {% if i.es_activo == True %}
+                                        <tr>
+                                            <td>
+                                                <label class="checkbox">
+                                                    <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}"/>
+                                                </label>
+                                            </td>
+                                            <td>{{i.tipo_sensor}}</td>
+                                            <td>{{i.tipo_activo}} {{i.nombre}}</td>
+                                            <td>{{i.descripcion}}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>        
+                        </table>
+                    </div>
+                </div>
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button type="submit" class="button is-block is-info is-fullwidth">Crear grupo</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
