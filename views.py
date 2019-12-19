@@ -106,10 +106,12 @@ def informacion_estructura(id):
     esta_monitoreada = True
     if(check_schema is None):
         esta_monitoreada = False
+    imagenes_estructura = ImagenEstructura.query.filter_by(id_estructura = id).all()
     context = {
         'datos_puente':estructura,
         'estado_monitoreo':estado_monitoreo,
-        'esta_monitoreada':esta_monitoreada
+        'esta_monitoreada':esta_monitoreada,
+        'imagenes_estructura':imagenes_estructura
     }
     return render_template('tabla_estructura.html', **context)
 
@@ -117,7 +119,7 @@ def informacion_estructura(id):
 @views_api.route('/zonas_estructura/<int:id>')
 @login_required
 def zonas_de_estructura(id):
-    zonas = db.session.query(ZonaEstructura.id, ZonaEstructura.material, TipoZona.nombre_zona).filter(ZonaEstructura.tipo_zona == TipoZona.id, ZonaEstructura.id_estructura==id).all()
+    zonas = db.session.query(ZonaEstructura.id, ZonaEstructura.descripcion, ZonaEstructura.material, TipoZona.nombre_zona).filter(ZonaEstructura.tipo_zona == TipoZona.id, ZonaEstructura.id_estructura==id).all()
     print(zonas, file=sys.stderr)
     context = {
         'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
@@ -511,3 +513,71 @@ def agregar_sensor_cluster_post(id_cluster):
         return redirect(url_for('views_api.sensores_cluster', id_cluster = id_cluster))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/sensores_zona/<int:id_zona>')
+@login_required
+def sensores_por_zona(id_zona):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        puente = db.session.query(Estructura.nombre, Estructura.tipo_activo).filter(ZonaEstructura.id_estructura == Estructura.id, ZonaEstructura.id == id_zona).first()
+        nombre_puente = puente.nombre.capitalize()
+        tipo_activo = puente.tipo_activo.lower()
+        zona = db.session.query(ZonaEstructura.descripcion).filter(ZonaEstructura.id==id_zona).first()
+        sensores = db.session.query(Sensor.id, SensorInstalado.id.label('si'), Sensor.frecuencia, TipoSensor.nombre).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_zona == id_zona).all()
+        context = {
+            'nombre_puente' : nombre_puente,
+            'tipo_activo' : tipo_activo,
+            'nombre_zona' : zona.descripcion,
+            'sensores' : sensores
+        }
+        return render_template('sensores_por_zona.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/historial_sensor/<int:id_sensor>')
+@login_required
+def historial_estado_sensor(id_sensor):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        x = db.session.query(SensorInstalado.id_estructura).filter(SensorInstalado.id_sensor == id_sensor).first().id_estructura
+        tipo_sensor = db.session.query(TipoSensor.nombre).filter(TipoSensor.id == Sensor.tipo_sensor, Sensor.id == id_sensor).first().nombre
+        historial = db.session.query(SensorInstalado.id, ZonaEstructura.descripcion, EstadoSensor.detalles, EstadoSensor.fecha_estado).filter(SensorInstalado.id == EstadoSensor.id_sensor_instalado, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_sensor == id_sensor).all()
+        context = {
+            'nombre_y_tipo_activo' : obtener_nombre_y_activo(x),
+            'tipo_sensor': tipo_sensor,
+            'id_sensor': id_sensor,
+            'historial' : historial
+        }
+        return render_template('historial_sensor.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/actualizar_estado_sensor/<int:id_sensor>')
+@login_required
+def actualizar_estado_sensor(id_sensor):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        x = db.session.query(SensorInstalado.id_estructura).filter(SensorInstalado.id_sensor == id_sensor).first().id_estructura
+        tipo_sensor = db.session.query(TipoSensor.nombre).filter(TipoSensor.id == Sensor.tipo_sensor, Sensor.id == id_sensor).first().nombre
+        context = {
+            'id_sensor' : id_sensor,
+            'tipo_sensor' : tipo_sensor,
+            'nombre_y_tipo_activo' : obtener_nombre_y_activo(x)
+        }
+        return render_template('actualizar_estado_sensor.html', **context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista
+@views_api.route('/actualizar_estado_sensor/<int:id_sensor>',methods=['POST'])
+@login_required
+def actualizar_estado_sensor_post(id_sensor):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        id_sensor_instalado_actual = db.session.query(SensorInstalado.id, InstalacionSensor.fecha_instalacion).filter(InstalacionSensor.id == SensorInstalado.id_instalacion, SensorInstalado.id_sensor == id_sensor).order_by(InstalacionSensor.fecha_instalacion.desc()).first().id
+        x = EstadoSensor(id_sensor_instalado=id_sensor_instalado_actual, detalles = request.form.get('nuevo_estado'), fecha_estado = datetime.now())
+        db.session.add(x)
+        db.session.commit()
+        return redirect(url_for('views_api.historial_estado_sensor',id_sensor=id_sensor))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+

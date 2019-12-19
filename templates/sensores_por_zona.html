@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">Sensores de {{nombre_zona}} en {{tipo_activo}} {{nombre_puente}}</h1>
+    <h2 class="subtitle"></h2>
+    <div class="row">
+        {% if current_user.permisos == 'Administrador' %}
+            <div class="col-md-3">
+                <form action="#">
+                    <button class="btn btn-secondary btn-sm">Añadir Sensor a Zona</button>
+                </form> 
+            </div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>Tipo de Sensor</th>
+                    <th>Frecuencia</th>                   
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in sensores %}
+                <tr>
+                    <td>{{i.nombre}}</td>
+                    <td>{{i.frecuencia}}</td>
+                    <td>
+                        <form action="{{url_for('views_api.obtener_lecturas',sensor=i.si)}}" method="GET">
+                            <button class="btn btn-secondary btn-sm" type="submit" id="lecturas" value="{{i.si}}">Lecturas</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="#" method="GET">
+                            <button class="btn btn-secondary btn-sm" type="submit" id="historial" value="{{i.id}}">Historial</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="{{url_for('views_api.historial_calibraciones_sensor',x=i.id)}}" method="GET">
+                            <button class="btn btn-secondary btn-sm" type="submit" id="calibraciones" value="{{i.id}}">Calibraciones</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

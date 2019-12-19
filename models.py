@@ -216,8 +216,8 @@ class VisualizacionBIM(db.Model):
 class ImagenEstructura(db.Model):
     __tablename__ = 'imagenes_estructura'
     __table_args__ = {'schema':'inventario_puentes'}
+    id_archivo = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_estructura = db.Column(db.Integer, db.ForeignKey('inventario_puentes.estructuras.id'), primary_key=True)
-    id_archivo = db.Column(db.Integer, primary_key=True)
     ruta_acceso_archivo = db.Column(db.String(100))
     descripcion = db.Column(db.String(2000))
 
