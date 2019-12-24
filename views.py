@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, session, flash, request, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug import secure_filename
 from models import *
 from flask_login import login_user, login_required, current_user, logout_user
 import sys
 import sqlalchemy
 import json
+import os
 from datetime import datetime
 
 views_api = Blueprint('views_api',__name__)
@@ -667,22 +669,95 @@ def editar_grupo(id):
         elif(request.method == 'POST'):
             inicial_query = SensorPorGrupoDefinido.query.filter_by(id_grupo = id).all()
             inicial_lista = [(i.id_sensor_instalado, i.id_grupo) for i in inicial_query] 
-            #print(inicial_lista)
             final_query = request.form.getlist('sensores_elegidos')
             final_lista = [(int(i), id) for i in final_query]
-            #print(final_lista)
             #remover elementos
             for i in inicial_lista:
                 if i not in final_lista:
-                    print(str(i)+' removido')
+                    #print(str(i)+' removido')
                     x = SensorPorGrupoDefinido.query.filter_by(id_sensor_instalado = i[0], id_grupo=i[1]).delete()
             #añadir elementos
             for i in final_lista:
                 if i not in inicial_lista:
-                    print(str(i)+' añadido')
+                    #print(str(i)+' añadido')
                     y = SensorPorGrupoDefinido(id_sensor_instalado = i[0], id_grupo = i[1], fecha_creacion = datetime.now())
                     db.session.add(y)
             db.session.commit()
             return redirect(url_for('views_api.grupos_usuario'))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/informes_estructura/<int:id_puente>')
+@login_required
+def informes_monitoreo_estructura(id_puente):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        print(os.getcwd(), file=sys.stderr)
+        informes = db.session.query(InformeMonitoreoVisual.ruta_acceso_archivo, InformeMonitoreoVisual.id_informe, Usuario.nombre, Usuario.apellido, InformeMonitoreoVisual.contenido, InformeMonitoreoVisual.fecha).filter(InformeMonitoreoVisual.id_usuario == Usuario.id, InformeMonitoreoVisual.id_estructura == id_puente).all()
+        context = {
+            'id_puente' : id_puente,
+            'nombre_y_tipo_activo' : obtener_nombre_y_activo(id_puente),
+            'informes' : informes
+        }
+        return render_template('informes_monitoreo_estructura.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/informe/<int:id>')
+@login_required
+def ver_informe(id):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        informe = InformeMonitoreoVisual.query.filter_by(id_informe = id).first()
+        context = {
+            'informe' : informe
+        }
+        return render_template('pdf_informe.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/eliminar_informe/<int:id>', methods=['POST'])
+@login_required
+def eliminar_informe(id):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        informe = InformeMonitoreoVisual.query.filter_by(id_informe = id).first()
+        os.chdir('static/reports')
+        os.remove(informe.ruta_acceso_archivo)
+        os.chdir('../..')
+        informe_a_borrar = InformeMonitoreoVisual.query.filter_by(id_informe = id).delete()
+        db.session.commit()
+        return redirect(url_for('views_api.informes_monitoreo_estructura',id_puente=informe.id_estructura))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/agregar_informe/<int:id_puente>', methods=['POST'])
+@login_required
+def agregar_informe(id_puente):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        file = request.files['input-file-now']
+        os.chdir('static/reports')
+        file.save(secure_filename(file.filename))
+        os.chdir('../..')
+        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=file.filename)
+        db.session.add(nuevo_informe)
+        db.session.commit()
+        return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/mis_informes')
+@login_required
+def informes_monitoreo_usuario():
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        informes = db.session.query(InformeMonitoreoVisual.ruta_acceso_archivo, InformeMonitoreoVisual.id_informe, Usuario.nombre, Usuario.apellido, InformeMonitoreoVisual.contenido, InformeMonitoreoVisual.fecha).filter(InformeMonitoreoVisual.id_usuario == Usuario.id, InformeMonitoreoVisual.id_usuario == current_user.id).all()
+        context = {
+            'informes' : informes
+        }
+        return render_template('mis_informes_monitoreo.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))

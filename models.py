@@ -229,6 +229,7 @@ class InformeMonitoreoVisual(db.Model):
     id_estructura = db.Column(db.Integer, db.ForeignKey('inventario_puentes.estructuras.id'))
     contenido = db.Column(db.String(2000))
     fecha = db.Column(db.DateTime)
+    ruta_acceso_archivo = db.Column(db.String(100))
 
 class InformeZona(db.Model):
     __tablename__ = 'informes_por_zona'

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="title">
+        Mis informes de monitoreo visual
+    </h1>
+    <div class="row">
+        <br>
+    </div>
+    <div class="row">
+        <table class="table table-hover clickable-row sortable">
+            <thead>
+                <tr>
+                    <th>Autor</th>
+                    <th>Detalles</th>
+                    <th>Fecha creación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in informes %}
+                <tr>
+                    <td>{{ i.nombre }} {{i.apellido}}</td>
+                    <td>{{ i.contenido }}</td>
+                    <td>{{ i.fecha }}</td>
+                    <td>
+                        <form action="{{url_for('views_api.ver_informe',id=i.id_informe)}}" method="GET">
+                            <button class="btn btn-primary btn-sm" type="submit" id="acceder" value="{{i.id_informe}}">Acceder</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="{{url_for('views_api.eliminar_informe',id=i.id_informe)}}" method="POST">
+                            <button class="btn btn-danger btn-sm" type="submit" id="eliminar" value="{{i.id_informe}}">Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
