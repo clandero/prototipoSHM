@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, flash, request, redirect, url_for
+from flask import Blueprint, render_template, session, flash, request, redirect, url_for, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug import secure_filename
 from models import *
@@ -110,11 +110,13 @@ def informacion_estructura(id):
     if(check_schema is None):
         esta_monitoreada = False
     imagenes_estructura = ImagenEstructura.query.filter_by(id_estructura = id).all()
+    bim_estructura = VisualizacionBIM.query.filter_by(id_estructura = id).first()
     context = {
         'datos_puente':estructura,
         'estado_monitoreo':estado_monitoreo,
         'esta_monitoreada':esta_monitoreada,
-        'imagenes_estructura':imagenes_estructura
+        'imagenes_estructura':imagenes_estructura,
+        'bim_estructura' : bim_estructura
     }
     return render_template('tabla_estructura.html', **context)
 
@@ -783,3 +785,61 @@ def informes_monitoreo_zona(id_zona):
         return render_template('informes_monitoreo_zona.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/hallazgos_informe/<int:id_informe>')
+@login_required
+def hallazgos_de_informe(id_informe):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        hallazgos = db.session.query(HallazgoVisual.id, HallazgoVisual.detalle_hallazgo, HallazgoVisual.fecha, HallazgoVisual.id_zona, ZonaEstructura.descripcion, HallazgoVisual.id_estructura, HallazgoInforme.id_informe).filter(HallazgoVisual.id == HallazgoInforme.id_hallazgo, ZonaEstructura.id == HallazgoVisual.id_zona, HallazgoInforme.id_informe == id_informe).all()
+        res = []
+        for i in hallazgos:
+            audiovisual = MaterialAudiovisual.query.filter_by(id_hallazgo = i[0]).all()
+            for j in audiovisual:
+                print(j.ruta_acceso_archivo)
+            element = {
+                'hallazgo' : i,
+                'material_apoyo' : audiovisual
+            }
+            res.append(element)
+        context = {
+            'id_informe' : id_informe,
+            'hallazgos' : res
+        }
+        return render_template('hallazgos_de_informe.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/agregar_hallazgo/<int:id_informe>', methods=['GET','POST'])
+@login_required
+def agregar_hallazgo(id_informe):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        if(request.method == 'GET'):
+            id_estructura = InformeMonitoreoVisual.query.filter_by(id_informe = id_informe).first().id_estructura
+            zonas_estructura = ZonaEstructura.query.filter_by(id_estructura = id_estructura).all()
+            context = {
+                'zonas_puente' : zonas_estructura,
+                'id_estructura' : id_estructura,
+                'id_informe' : id_informe
+            }
+            return render_template('agregar_hallazgo.html',**context)
+        elif(request.method == 'POST'):
+            id_estructura = InformeMonitoreoVisual.query.filter_by(id_informe = id_informe).first().id_estructura
+            nuevo_hallazgo = HallazgoVisual(id_usuario=current_user.id, detalle_hallazgo=request.form.get('detalle'), fecha=datetime.now(), id_zona = request.form.get('zona_puente'), id_estructura=id_estructura)
+            db.session.add(nuevo_hallazgo)
+            db.session.flush()
+            asociar_a_informe = HallazgoInforme(id_informe=id_informe, id_hallazgo=nuevo_hallazgo.id)
+            db.session.add(asociar_a_informe)
+            db.session.commit()
+            return redirect(url_for('views_api.hallazgos_de_informe',id_informe=id_informe))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+@views_api.route('/static/bim/<string:filename>')
+def show_3d_bim(filename):
+    return send_file('./static/bim/'+filename)
+
+@views_api.route('/static/images/<string:filename>')
+def show_image(filename):
+    return send_file('./static/images/'+filename)

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Agregar hallazgo a informe N° {{id_informe}}</h3>
+    <div class="box">
+        <form action="{{url_for('views_api.agregar_hallazgo',id_informe = id_informe)}}" method="POST">
+            <!--Zona del puente-->
+            <div class="field">
+                <select class="form-control" id="zona_puente" name="zona_puente">
+                    <option value="" style="display:none;">Zona asociada</option>
+                    {% for i in zonas_puente %}
+                        <option value="{{ i.id }}">{{ i.descripcion }}</option>
+                    {% endfor %}
+                </select>    
+            </div>
+            <!--Nuevo Hallazgo-->
+            <div class="field">
+                <div class="control">
+                    <input class="input" type="text" name="detalle" placeholder="Detalle de hallazgo">
+                </div>
+            </div>
+            <button class="button is-block is-info is-fullwidth">Agregar</button>
+        </form>    
+    </div>
+</div>
+{% endblock %}

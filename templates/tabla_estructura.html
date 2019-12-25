@@ -109,11 +109,10 @@
                 </script>
             </div>
         </div>
-        <div class="col-md-4">
-            <br><br><br><br>
-            <h1 align="center">Visualización 2D/3D</h1>
+        <div class="col-md-4" id='3dbim'>
+            <iframe height="100%" width="100%" src="{{url_for('views_api.show_3d_bim',filename = bim_estructura.ruta_acceso_archivo)}}"></iframe>
         </div>
-    </div>
+    </div>tabla_estr
     <div class="row">
         <br>
         <br>
@@ -167,12 +166,20 @@
             {% if imagenes_estructura != None %}
                 <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
                     <div class="carousel-inner">
-                        <div class="carousel-item active">
-                            {% for i in imagenes_estructura %}
+                        {% for i in imagenes_estructura %}
+                            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
                                 <img class="d-block w-100" src="/static/images/{{i.ruta_acceso_archivo}}" alt="{{i.descripcion}}">
-                            {% endfor %}
-                        </div>
+                            </div>
+                        {% endfor %}
                     </div>
+                    <a class="carousel-control-prev" href="#carouselExampleSlidesOnly" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#carouselExampleSlidesOnly" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
                 </div>
             {% endif %}
         </div>

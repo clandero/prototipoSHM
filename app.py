@@ -7,7 +7,7 @@ from views import views_api
 from models import db, Usuario
 from flask_login import LoginManager
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='')
 app.config.from_pyfile('config.py')
 db.init_app(app)
 app.register_blueprint(views_api)
