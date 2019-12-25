@@ -8,6 +8,7 @@ import sqlalchemy
 import json
 import os
 from datetime import datetime
+import unidecode
 
 views_api = Blueprint('views_api',__name__)
 
@@ -709,6 +710,7 @@ def informes_monitoreo_estructura(id_puente):
 def ver_informe(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
         informe = InformeMonitoreoVisual.query.filter_by(id_informe = id).first()
+        print(informe.ruta_acceso_archivo)
         context = {
             'informe' : informe
         }
@@ -738,11 +740,12 @@ def eliminar_informe(id):
 @login_required
 def agregar_informe(id_puente):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        print(os.getcwd())
         file = request.files['input-file-now']
         os.chdir('static/reports')
-        file.save(secure_filename(file.filename))
+        file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
         os.chdir('../..')
-        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=file.filename)
+        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
         db.session.add(nuevo_informe)
         db.session.commit()
         return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
@@ -759,5 +762,24 @@ def informes_monitoreo_usuario():
             'informes' : informes
         }
         return render_template('mis_informes_monitoreo.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/informes_zona/<int:id_zona>')
+@login_required
+def informes_monitoreo_zona(id_zona):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        estructura = db.session.query(ZonaEstructura.id_estructura, ZonaEstructura.descripcion).filter(ZonaEstructura.id == id_zona).first()
+        id_estructura = estructura.id_estructura
+        descripcion = estructura.descripcion
+        informes = db.session.query(Usuario.nombre, Usuario.apellido, InformeMonitoreoVisual.id_informe, InformeMonitoreoVisual.id_usuario, InformeMonitoreoVisual.contenido, InformeMonitoreoVisual.fecha, InformeMonitoreoVisual.ruta_acceso_archivo, InformeZona.id_zona).filter(Usuario.id == InformeMonitoreoVisual.id_usuario, InformeZona.id_informe == InformeMonitoreoVisual.id_informe, InformeZona.id_zona == id_zona).all()
+        context = {
+            'id_puente' : id_estructura,
+            'nombre_y_tipo_activo' : obtener_nombre_y_activo(id_estructura),
+            'descripcion' : descripcion,
+            'informes' : informes
+        }
+        return render_template('informes_monitoreo_zona.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
