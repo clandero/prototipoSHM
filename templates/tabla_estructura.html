@@ -39,6 +39,9 @@
                     <form action="{{url_for('views_api.clusters_estructura', id_puente=datos_puente.id)}}">
                         <button class="btn btn-secondary btn-sm">Clusters</button>
                     </form>
+                    <form action="{{url_for('views_api.show_3d_bim',filename = bim_estructura.ruta_acceso_archivo)}}">
+                        <button class="btn btn-secondary btn-sm">Visualización 3D</button>
+                    </form>
             {% endif %}
         {% else %}
             {% if current_user.permisos == 'Administrador' %}
@@ -48,14 +51,19 @@
             {% endif %} 
         {% endif %}
     </div>
+    <br>
+    <div class="btn-toolbar">
+        <form action="{{url_for('views_api.informes_monitoreo_estructura', id_puente=datos_puente.id)}}">
+            <button class="btn btn-secondary btn-sm">Informes de monitoreo</button>
+        </form>
+    </div>
     <div class="row">
-        <br>
         <br>
         <br>
     </div>
     <div class="row">
-        <div class="col-md-4">
-            <table class="table table-hover clickable-row sortable">
+        <div class="col-md-6">
+            <table class="table table-hover clickable-row sortable mw-50">
                 <thead>
                     <tr>
                         <th>Ubicación</th>
@@ -81,45 +89,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="col-md-4">
-            <div id="map">
-                <script>
-                    function onMapClick(e) {
-                        popup.setLatLng(e.latlng);
-                        popup.setContent("Has pulsado en Lat=" + e.latlng.lat + " Long=" + e.latlng.lng);
-                        popup.openOn(map);
-                    }
-                    
-                    //var osmLayer = new L.TileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=zZkrANgINoCERa0zI6td');
-                    var ESRIWorldImageryLayer = new L.TileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
-        
-                    var baseMaps = {
-                        'ESRI World Imagery': ESRIWorldImageryLayer
-                    };
-        
-                    var layerControl = new L.control.layers(baseMaps);
-                    var map = L.map('map');
-                    map.setView(new L.LatLng('{{datos_puente.coord_x}}','{{datos_puente.coord_y}}'),17);
-                    map.addControl(layerControl);    
-                    map.addLayer(ESRIWorldImageryLayer);
-        
-                    var popup = new L.popup();
-                    var marker = L.marker(['{{datos_puente.coord_x}}','{{datos_puente.coord_y}}']).addTo(map);
-                    map.on('click', onMapClick);
-                </script>
-            </div>
-        </div>
-        <div class="col-md-4" id='3dbim'>
-            <iframe height="100%" width="100%" src="{{url_for('views_api.show_3d_bim',filename = bim_estructura.ruta_acceso_archivo)}}"></iframe>
-        </div>
-    </div>tabla_estr
-    <div class="row">
-        <br>
-        <br>
-        <br>
-    </div>
-    <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <table class="table table-hover clickable-row sortable">
                 <thead>
                     <tr>
@@ -162,7 +132,14 @@
                 </tbody>
             </table>
         </div>
-        <div class="col-md-4">
+    </div>
+    <div class="row">
+        <br>
+        <br>
+        <br>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
             {% if imagenes_estructura != None %}
                 <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
                     <div class="carousel-inner">
@@ -182,6 +159,35 @@
                     </a>
                 </div>
             {% endif %}
+        </div>
+        <div class="col-md-6">
+            <div id="map">
+                <script>
+                    function onMapClick(e) {
+                        popup.setLatLng(e.latlng);
+                        popup.setContent("Has pulsado en Lat=" + e.latlng.lat + " Long=" + e.latlng.lng);
+                        popup.openOn(map);
+                    }
+                    
+                    //var osmLayer = new L.TileLayer('https://api.maptiler.com/maps/basic/{z}/{x}/{y}.png?key=zZkrANgINoCERa0zI6td');
+                    var ESRIWorldImageryLayer = new L.TileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+        
+                    var baseMaps = {
+                        'ESRI World Imagery': ESRIWorldImageryLayer
+                    };
+        
+                    var layerControl = new L.control.layers(baseMaps);
+                    var map = L.map('map');
+                    map.setView(new L.LatLng('{{datos_puente.coord_x}}','{{datos_puente.coord_y}}'),17);
+                    map.addControl(layerControl);    
+                    map.addLayer(ESRIWorldImageryLayer);
+        
+                    var popup = new L.popup();
+                    var marker = L.marker(['{{datos_puente.coord_x}}','{{datos_puente.coord_y}}']).addTo(map);
+                    map.on('click', onMapClick);
+                </script>
+            </div>
+            
         </div>
     </div>
 </div>

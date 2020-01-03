@@ -4,15 +4,7 @@
 <div class="container">
     <h1 class="title">Clusters de {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
     <h2 class="subtitle"></h2>
-    <div class="row">
-        {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
-            <div class="col-md-2">
-                <form action="#">
-                    <button class="btn btn-secondary btn-sm">Crear nuevo cluster</button>
-                </form> 
-            </div>
-        {% endif %}
-    </div>
+    <br>
     <div class="row">
         <table class="table table-hover clickable-row sortable">
             <thead>

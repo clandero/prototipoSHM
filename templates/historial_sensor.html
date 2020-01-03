@@ -6,7 +6,7 @@
     <div class="row">
         <div class="col col-md-2 col-sm-2 text-center">
             {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
-                <form action="#">
+                <form action="{{url_for('views_api.actualizar_estado_sensor',id_sensor=id_sensor)}}">
                     <button class="btn btn-secondary btn-sm">Actualizar Estado</button>
                 </form>
             {% endif %}

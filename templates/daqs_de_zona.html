@@ -4,16 +4,17 @@
 <div class="container">
     <h1 class="title">DAQs de {{nombre_zona}} en {{tipo_activo}} {{nombre_puente}}</h1>
     <h2 class="subtitle"></h2>
+    <br>
     <div class="row">
         {% if current_user.permisos == 'Administrador' %}
             <div class="col-md-2">
-                <form action="#">
+                <form action="{{url_for('views_api.agregar_daq', id_puente=id_puente)}}" method="GET">
                     <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
                 </form> 
             </div>
         {% endif %}
     </div>
-
+    <br>
     <div class="row">
         <table class="table table-hover clickable-row sortable">
             <thead>

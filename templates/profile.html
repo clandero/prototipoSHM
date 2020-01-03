@@ -9,4 +9,13 @@
 <h2 class="subtitle">
   Permisos: {{ current_user.permisos }}
 </h2>
+<div class="btn-toolbar">
+  <form action="{{url_for('views_api.grupos_usuario')}}">
+    <button class="btn btn-secondary btn-sm">Mis Grupos</button>
+  </form>
+  <form action="{{url_for('views_api.informes_monitoreo_usuario')}}">
+    <button class="btn btn-secondary btn-sm">Mis Informes de monitoreo</button>
+  </form>
+</div>
+
 {% endblock %}

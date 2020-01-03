@@ -211,12 +211,15 @@ def crear_tabla_sensor(id_sensor_instalado, nombre_nueva_tabla):
 @login_required
 def obtener_lecturas(sensor):
     if(current_user.permisos != 'Visita'):
-        nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
-        lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
-        res = {}
-        for i in lecturas:
-            res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
-        return res
+        try:
+            nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
+            lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
+            res = {}
+            for i in lecturas:
+                res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
+            return res
+        except Exception as e:
+            return render_template('usuario_no_autorizado.html')
     else:
         return render_template('usuario_no_autorizado.html')
 
@@ -313,6 +316,7 @@ def daqs_de_estructura(id_puente):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
         daqs = db.session.query(DAQ.id, DAQ.nro_canales, DescripcionDAQ.caracteristicas, EstadoDAQ.detalles, EstadoDAQ.fecha_estado).filter(EstadoDAQ.id_daq == DAQ.id, DescripcionDAQ.id_daq == DAQ.id, DAQPorZona.id_daq == DAQ.id, ZonaEstructura.id == DAQPorZona.id_zona, DAQPorZona.id_estructura == id_puente).distinct(DAQ.id).order_by(DAQ.id.asc(), EstadoDAQ.fecha_estado.desc()).all()
         context = {
+            'id_puente' : id_puente,
             'nombre_y_tipo_activo' : obtener_nombre_y_activo(id_puente),
             'daqs' : daqs
         }
@@ -325,12 +329,13 @@ def daqs_de_estructura(id_puente):
 @login_required
 def daqs_de_zona(id_zona):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
-        puente = db.session.query(Estructura.nombre, Estructura.tipo_activo).filter(ZonaEstructura.id_estructura == Estructura.id, ZonaEstructura.id == id_zona).first()
+        puente = db.session.query(Estructura.id, Estructura.nombre, Estructura.tipo_activo).filter(ZonaEstructura.id_estructura == Estructura.id, ZonaEstructura.id == id_zona).first()
         nombre_puente = puente.nombre.capitalize()
         tipo_activo = puente.tipo_activo.lower()
         zona = db.session.query(TipoZona.nombre_zona).filter(ZonaEstructura.tipo_zona == TipoZona.id, ZonaEstructura.id==id_zona).first()
         daqs = db.session.query(DAQ.id, DAQ.nro_canales, DescripcionDAQ.caracteristicas, EstadoDAQ.detalles, EstadoDAQ.fecha_estado).filter(EstadoDAQ.id_daq == DAQ.id, DescripcionDAQ.id_daq == DAQ.id, DAQPorZona.id_daq == DAQ.id, ZonaEstructura.id == DAQPorZona.id_zona, DAQPorZona.id_zona == id_zona).distinct(DAQ.id).order_by(DAQ.id.asc(), EstadoDAQ.fecha_estado.desc()).all()
         context = {
+            'id_puente' : puente.id,
             'nombre_puente' : nombre_puente,
             'tipo_activo' : tipo_activo,
             'nombre_zona' : zona.nombre_zona,
@@ -478,6 +483,7 @@ def sensores_cluster(id_cluster):
         sensores_cluster = db.session.query(Sensor.id, SensorInstalado.id.label("si"), ZonaEstructura.descripcion, Sensor.frecuencia, TipoSensor.nombre, SensorInstalado.es_activo).filter(SensorInstalado.id == ConjuntoSensorInstalado.id_sensor_instalado, Sensor.id == SensorInstalado.id_sensor, ZonaEstructura.id == SensorInstalado.id_zona, TipoSensor.id == Sensor.tipo_sensor, ConjuntoSensorInstalado.id_conjunto == id_cluster).all()
         print(sensores_cluster)
         context = {
+            'id_cluster' : id_cluster,
             'nombre_cluster' : nombre_cluster,
             'sensores_cluster' : sensores_cluster
         }
@@ -843,3 +849,36 @@ def show_3d_bim(filename):
 @views_api.route('/static/images/<string:filename>')
 def show_image(filename):
     return send_file('./static/images/'+filename)
+
+#PERMISOS = Administrador, analista
+@views_api.route('/agregar_daq/<int:id_puente>', methods = ['GET','POST'])
+@login_required
+def agregar_daq(id_puente):
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        if(request.method == 'GET'):
+            zonas_puente = ZonaEstructura.query.filter_by(id_estructura = id_puente).all()
+            context = {
+                'id_puente' : id_puente,
+                'zonas_puente' : zonas_puente,
+                'nombre_y_tipo_activo' : obtener_nombre_y_activo(id_puente)
+            }
+            return render_template('agregar_daq.html',**context)
+        elif(request.method == 'POST'):
+            nuevo_daq = DAQ(nro_canales=request.form.get('nro_canales'))
+            db.session.add(nuevo_daq)
+            db.session.flush()
+            zona_daq = DAQPorZona(id_daq=nuevo_daq.id, id_zona=request.form.get('zona_puente'), id_estructura=id_puente)
+            db.session.add(zona_daq)
+            caract = DescripcionDAQ(id_daq=nuevo_daq.id, caracteristicas=request.form.get('caracteristicas'))
+            db.session.add(caract)
+            estado_nuevo_daq = EstadoDAQ(id_daq=nuevo_daq.id, fecha_estado=datetime.now(), detalles='Conectado')
+            db.session.add(estado_nuevo_daq)
+            canales = []
+            for i in range(1,int(nuevo_daq.nro_canales)+1):
+                x = Canal(id_daq=nuevo_daq.id, numero_canal=i)
+                canales.append(x)
+            db.session.bulk_save_objects(canales)                
+            db.session.commit()
+            return redirect(url_for('views_api.daqs_de_estructura',id_puente = id_puente))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
