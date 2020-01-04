@@ -5,6 +5,38 @@
     <h1 class="title">
         Mis informes de monitoreo visual
     </h1>
+    <div class="row"> 
+        <div class="col col-md-3 col-sm-3">
+                <button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#addinformeModal">Agregar nuevo informe</button>
+                <div class="modal fade" id="addinformeModal" tabindex="-1" role="dialog" aria-labelledby="addinformeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4>Agregar nuevo informe</h4>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        <div class="modal-body">
+                            <form action="{{url_for('views_api.agregar_informe_test')}}" method="POST" enctype = "multipart/form-data">
+                                <input class="input" type="text" name="id_puente" placeholder="ID de la estructura">
+                                <input class="input" type="text" name="contenido" placeholder="Descripción">
+                                <br><br>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" name="input-file-now" id="input-file-now" class="file-upload" />
+                                </div>
+                                <br>
+                                <button type="submit" class="btn btn-success">Agregar</button>
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Descartar</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>                 
+    </div>
     <div class="row">
         <br>
     </div>
@@ -26,6 +58,11 @@
                     <td>
                         <form action="{{url_for('views_api.ver_informe',id=i.id_informe)}}" method="GET">
                             <button class="btn btn-primary btn-sm" type="submit" id="acceder" value="{{i.id_informe}}">Acceder</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form action="{{url_for('views_api.hallazgos_de_informe',id_informe=i.id_informe)}}" method="GET">
+                            <button class="btn btn-secondary btn-sm" type="submit" id="eliminar" value="{{i.id_informe}}">Hallazgos</button>
                         </form>
                     </td>
                     <td>

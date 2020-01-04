@@ -761,6 +761,24 @@ def agregar_informe(id_puente):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+@views_api.route('/agregar_informe', methods=['POST'])
+@login_required
+def agregar_informe_test():
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        print(os.getcwd())
+        id_puente = request.form.get('id_puente')
+        file = request.files['input-file-now']
+        os.chdir('static/reports')
+        file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
+        os.chdir('../..')
+        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
+        db.session.add(nuevo_informe)
+        db.session.commit()
+        return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
 @views_api.route('/mis_informes')
 @login_required
 def informes_monitoreo_usuario():
@@ -801,8 +819,6 @@ def hallazgos_de_informe(id_informe):
         res = []
         for i in hallazgos:
             audiovisual = MaterialAudiovisual.query.filter_by(id_hallazgo = i[0]).all()
-            for j in audiovisual:
-                print(j.ruta_acceso_archivo)
             element = {
                 'hallazgo' : i,
                 'material_apoyo' : audiovisual
@@ -835,6 +851,15 @@ def agregar_hallazgo(id_informe):
             nuevo_hallazgo = HallazgoVisual(id_usuario=current_user.id, detalle_hallazgo=request.form.get('detalle'), fecha=datetime.now(), id_zona = request.form.get('zona_puente'), id_estructura=id_estructura)
             db.session.add(nuevo_hallazgo)
             db.session.flush()
+            imagenes = request.files.getlist('imagenes')
+            list_img = []
+            os.chdir('static/images')
+            for i in imagenes:
+                print(i)
+                i.save(secure_filename(unidecode.unidecode(i.filename.replace(" ","_"))))
+                list_img.append(MaterialAudiovisual(id_hallazgo=nuevo_hallazgo.id, tipo_material='imagen',ruta_acceso_archivo=unidecode.unidecode(i.filename.replace(" ","_"))))
+            os.chdir('../..')
+            db.session.bulk_save_objects(list_img)
             asociar_a_informe = HallazgoInforme(id_informe=id_informe, id_hallazgo=nuevo_hallazgo.id)
             db.session.add(asociar_a_informe)
             db.session.commit()
@@ -849,6 +874,10 @@ def show_3d_bim(filename):
 @views_api.route('/static/images/<string:filename>')
 def show_image(filename):
     return send_file('./static/images/'+filename)
+
+@views_api.route('/static/reports/<string:filename>')
+def show_report(filename):
+    return send_file('./static/reports/'+filename)
 
 #PERMISOS = Administrador, analista
 @views_api.route('/agregar_daq/<int:id_puente>', methods = ['GET','POST'])
@@ -882,3 +911,37 @@ def agregar_daq(id_puente):
             return redirect(url_for('views_api.daqs_de_estructura',id_puente = id_puente))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+
+#PERMISOS = Administrador
+@views_api.route('/sensores_estructura_test/<int:id>',methods=["GET","POST"])
+@login_required
+def sensores_de_estructura_test(id):
+    if(current_user.permisos == "Administrador"):
+        if(request.method == "GET"):
+            sensores_actuales = db.session.query(Sensor.id, SensorInstalado.id.label("si"), Sensor.frecuencia, TipoSensor.nombre, ZonaEstructura.descripcion, InstalacionSensor.fecha_instalacion, SensorInstalado.es_activo).filter(TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_sensor == Sensor.id, SensorInstalado.id_instalacion == InstalacionSensor.id, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_estructura == id).distinct(Sensor.id).order_by(Sensor.id, InstalacionSensor.fecha_instalacion.desc()).all()
+            print(sensores_actuales, file=sys.stderr)
+            context = {
+                'id_puente' : id,
+                'fecha_actual' : datetime.now().strftime('%Y-%m-%d'),
+                'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
+                'sensores_puente' : sensores_actuales
+            }
+            return render_template('sensores_puente_test.html',**context)
+        elif(request.method == "POST"):
+            fecha = request.form.get('date')
+            x = db.session.query(Sensor.id, SensorInstalado.id.label("si"), Sensor.frecuencia, TipoSensor.nombre, ZonaEstructura.descripcion, InstalacionSensor.fecha_instalacion, SensorInstalado.es_activo).filter(TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_sensor == Sensor.id, SensorInstalado.id_instalacion == InstalacionSensor.id, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_estructura == id, InstalacionSensor.fecha_instalacion <= fecha).distinct(Sensor.id).order_by(Sensor.id, InstalacionSensor.fecha_instalacion.desc()).subquery()
+            sensores = db.session.query(x).filter(x.c.es_activo == True)
+            print(sensores, file=sys.stderr)
+            context = {
+                'id_puente' : id,
+                'fecha_actual' : request.form.get('date'),
+                'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
+                'sensores_puente' : sensores
+            }
+            return render_template('sensores_puente_test.html',**context)
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))
+    
+    
+    
