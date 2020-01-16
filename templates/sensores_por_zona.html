@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">Sensores de {{nombre_zona}} en {{tipo_activo}} {{nombre_puente}}</h1>
-    <h2 class="subtitle"></h2>
-    <br>
-    <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">Sensores de {{nombre_zona}} en {{tipo_activo}} {{nombre_puente}}</h1>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>Tipo de Sensor</th>
-                    <th>Frecuencia</th>                   
+                    <th>Frecuencia</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>                   
                 </tr>
             </thead>
             <tbody>
                 {% for i in sensores %}
                 <tr>
                     <td>{{i.nombre}}</td>
-                    <td>{{i.frecuencia}}</td>
+                    <td>{{i.frecuencia}} Hz</td>
                     <td>
                         <form action="{{url_for('views_api.obtener_lecturas',sensor=i.si)}}" method="GET">
                             <button class="btn btn-secondary btn-sm" type="submit" id="lecturas" value="{{i.si}}">Lecturas</button>

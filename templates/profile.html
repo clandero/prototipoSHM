@@ -1,21 +1,43 @@
-<!-- templates/profile.html -->
-
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title">
-  Bienvenido, {{ current_user.nombre }} {{ current_user.apellido }}!
-</h1>
-<h2 class="subtitle">
-  Permisos: {{ current_user.permisos }}
-</h2>
-<div class="btn-toolbar">
-  <form action="{{url_for('views_api.grupos_usuario')}}">
-    <button class="btn btn-secondary btn-sm">Mis Grupos</button>
-  </form>
-  <form action="{{url_for('views_api.informes_monitoreo_usuario')}}">
-    <button class="btn btn-secondary btn-sm">Mis Informes de monitoreo</button>
-  </form>
+<style>
+  body, html{
+      height: 100%;
+      margin: 0;
+  }
+  .bg {
+      background-image: url(/static/images/index1.jpeg);
+      background-position: center center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-size: cover;
+      background-color:#464646;
+  }
+  @media only screen and (max-width: 767px) {
+      .bg {
+          background-image: url(/static/images/index1.jpeg);
+      }
+  }
+</style>
+<div class="bg" style="min-height: 100%; align-items: center;justify-content: center;">
+  <div class="container py-5">
+    <div class="jumbotron">
+      <h1 class="title">
+        Bienvenido, {{ current_user.nombre }} {{ current_user.apellido }}!
+      </h1>
+      <h2 class="subtitle">
+        Permisos: {{ current_user.permisos }}
+      </h2>
+      <div class="btn-toolbar">
+        <form action="{{url_for('views_api.grupos_usuario')}}">
+          <button class="btn btn-secondary btn-sm">Mis Grupos</button>
+        </form>
+        <form action="{{url_for('views_api.informes_monitoreo_usuario')}}">
+          <button class="btn btn-secondary btn-sm">Mis Informes de monitoreo</button>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>
-
 {% endblock %}

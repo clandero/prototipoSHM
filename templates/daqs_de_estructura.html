@@ -1,26 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">DAQs de {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
-    <h2 class="subtitle"></h2>
-    <br>
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">DAQs de {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
     <div class="row">
-        <div class="col-md-2">
-            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+        {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+            <div class="col-md-2">
                 <form action="{{url_for('views_api.agregar_daq',id_puente=id_puente)}}">
                     <button class="btn btn-secondary btn-sm">Añadir nuevo DAQ</button>
                 </form>
-            {% endif %}
-        </div>
+            </div>
+        {% endif %}
     </div>
-    <br>
-    <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Último estado</th>
+                    <th>Estado más reciente</th>
+                    <th>Fecha</th>
                     <th>N° de canales</th> 
                     <th>Características</th>                   
                 </tr>
@@ -29,7 +27,8 @@
                 {% for i in daqs %}
                 <tr>
                     <td>{{i.id}}</td>
-                    <td>{{i.detalles}} - {{i.fecha_estado}}</td>
+                    <td>{{i.detalles}}</td>
+                    <td>{{i.fecha_estado.strftime('%Y-%m-%d %H:%M:%S')}}</td>
                     <td>{{i.nro_canales}}</td>
                     <td>{{i.caracteristicas}}</td>
                 </tr>

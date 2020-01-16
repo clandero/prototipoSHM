@@ -1,22 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">Sus grupos definidos</h1>
-    <h2 class="subtitle"></h2>
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">Sus grupos definidos</h1>
     <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+        <div class="col-md-2">
+            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+                <form action="{{url_for('views_api.grupo_definido_usuario')}}">
+                    <button class="btn btn-secondary btn-sm">Crear nuevo grupo</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>Nombre</th>
                     <th>Fecha de creación</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 {% for i in grupos %}
                 <tr>
                     <td>{{i.nombre}}</td>
-                    <td>{{i.fecha_creacion}}</td>
+                    <td>{{i.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')}}</td>
                     <td>
                         <form action="{{url_for('views_api.sensores_de_grupo',id=i.id)}}">
                             <button class="btn btn-primary btn-sm" type="submit" id="detalles" value="{{i.id}}">Detalles</button>

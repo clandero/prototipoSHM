@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">
-        Mis informes de monitoreo visual
-    </h1>
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">Mis informes de monitoreo visual</h1>
     <div class="row"> 
         <div class="col col-md-3 col-sm-3">
                 <button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#addinformeModal">Agregar nuevo informe</button>
@@ -37,16 +35,16 @@
             </div>
         </div>                 
     </div>
-    <div class="row">
-        <br>
-    </div>
-    <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>Autor</th>
                     <th>Detalles</th>
                     <th>Fecha creación</th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -54,7 +52,7 @@
                 <tr>
                     <td>{{ i.nombre }} {{i.apellido}}</td>
                     <td>{{ i.contenido }}</td>
-                    <td>{{ i.fecha }}</td>
+                    <td>{{ i.fecha.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                     <td>
                         <form action="{{url_for('views_api.ver_informe',id=i.id_informe)}}" method="GET">
                             <button class="btn btn-primary btn-sm" type="submit" id="acceder" value="{{i.id_informe}}">Acceder</button>

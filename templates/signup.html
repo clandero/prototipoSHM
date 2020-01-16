@@ -3,9 +3,32 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
-    <h3 class="title">Registrarse</h3>
+<style>
+    body, html{
+        height: 100%;
+        margin: 0;
+    }
+    .bg {
+        background-image: url(/static/images/index1.jpeg);
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        background-color:#464646;
+    }
+    @media only screen and (max-width: 767px) {
+        .bg {
+            background-image: url(/static/images/index1.jpeg);
+        }
+    }
+    h1{
+        text-align: center;
+    }
+</style>
+
+<div class="bg" style="min-height: 100%; display: flex;align-items: center;justify-content: center;">
     <div class="box">
+        <h3 class="title">Registrarse</h3>
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             <div class="notification is-danger">

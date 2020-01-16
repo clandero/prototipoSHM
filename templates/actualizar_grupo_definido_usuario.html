@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">Actualizar grupo de sensores "{{nombre_grupo}}"</h1>
-    <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
-    <br>
-    <div class="row">
+<div class="container-fluid px-5 py-5">
+    <div class="py-3">
+        <h1 class="title">Actualizar grupo de sensores "{{nombre_grupo}}"</h1>
+        <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
+    </div>
+    <div class="row py-3">
         <div class="column is-12">
             <form action="{{url_for('views_api.editar_grupo',id=id_grupo)}}" method="POST">
                 <div class="field">
                     <div class="control">
-                        <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" value="{{nombre_grupo}}" required>
+                        Nombre: <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" value="{{nombre_grupo}}" required>
                     </div>
                 </div>
                 <div class="field">
                     <div class="control">
-                        <table class="table table-hover clickable-row sortable">
-                            <thead>
+                        <table class="table table-striped table-hover clickable-row sortable">
+                            <thead class="thead-dark">
                                 <tr>
                                     <th></th>
                                     <th>Tipo de sensor</th>

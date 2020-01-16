@@ -1,24 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">
-        Revisiones de DAQ N° {{ id_daq }} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}
-    </h1>
-    
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">Revisiones de DAQ N° {{ id_daq }} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
     <div class="row">
-        <div class="col col-md-2 col-sm-2 text-center">
-            <form action="{{url_for('views_api.actualizar_revision_daq',id_daq=id_daq)}}">
-                <button class="btn btn-secondary btn-sm">Nueva revisión</button>
-            </form>
-        </div>                     
+        {% if current_user.permisos == 'Administrador' %}
+            <div class="col-md-2">
+                <form action="{{url_for('views_api.actualizar_revision_daq',id_daq=id_daq)}}">
+                    <button class="btn btn-secondary btn-sm">Nueva revisión</button>
+                </form>
+            </div>
+        {% endif %}                     
     </div>
-    <div class="row">
-        <br>
-    </div>
-    <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>Fecha</th>
                     <th>Detalles</th>

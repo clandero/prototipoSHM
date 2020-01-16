@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="title">Calibraciones de {{tipo_sensor}} N° {{id_sensor}}</h1>
+<div class="container-fluid px-5 py-5">
+    <h1 class="title py-3">Calibraciones de {{tipo_sensor}} N° {{id_sensor}}</h1>
     <div class="row">
-        <div class="col col-md-2 col-sm-2 text-center">
-            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+        {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+            <div class="col-md-2">
                 <form action="{{url_for('views_api.nueva_calibracion',x=id_sensor)}}">
                     <button class="btn btn-secondary btn-sm">Nueva Calibración</button>
                 </form>
-            {% endif %}
-        </div>                
+            </div>
+        {% endif %}                
     </div>
-    <div class="row">
-        <table class="table table-hover clickable-row sortable">
-            <thead>
+    <div class="row py-3">
+        <table class="table table-striped table-hover clickable-row sortable">
+            <thead class="thead-dark">
                 <tr>
                     <th>Fecha</th>
                     <th>Detalles</th>
@@ -24,7 +24,7 @@
             <tbody>
                 {% for i in calibraciones %}
                 <tr>
-                    <td>{{i.fecha_calibracion}}</td>
+                    <td>{{i.fecha_calibracion.strftime('%Y-%m-%d %H:%M:%S')}}</td>
                     <td>{{i.detalles}}</td>
                     <td>{{i.descripcion}}</td>
                 </tr>
