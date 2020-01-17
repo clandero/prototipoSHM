@@ -6,3 +6,5 @@ Flask-Table
 flask-blueprint
 flask-login
 Unidecode
+flask-script
+psycopg2

@@ -208,27 +208,23 @@ def crear_tabla_sensor(id_sensor_instalado, nombre_nueva_tabla):
 
 #PERMISOS = Administrador, dueño y analista
 @views_api.route('/lecturas_sensor/<int:sensor>')
-@login_required
 def obtener_lecturas(sensor):
-    if(current_user.permisos != 'Visita'):
-        try:
-            nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
-            #lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
-            lecturas = db.session.execute("""SELECT time_bucket('10 seconds', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC""")
-            res = {}
-            for i in lecturas:
-                #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
-                res[i['sec'].strftime("%d-%d-%Y %H:%M:%S.%f")] = {
-                    'max' : i['max'],
-                    'min' : i['min'],
-                    'avg' : i['avg']
-                }
-            return res
-        except Exception as e:
-            return render_template('usuario_no_autorizado.html')
-    else:
+    try:
+        nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
+        #lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
+        lecturas = db.session.execute("""SELECT time_bucket('10 seconds', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC""")
+        res = {}
+        for i in lecturas:
+            #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
+            res[i['sec'].strftime("%d-%d-%Y %H:%M:%S.%f")] = {
+                'max' : i['max'],
+                'min' : i['min'],
+                'avg' : i['avg']
+            }
+        return res
+    except Exception as e:
         return render_template('usuario_no_autorizado.html')
-
+    
 
 
 #PERMISOS = Administrador, analista
