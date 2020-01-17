@@ -8,3 +8,4 @@ flask-login
 Unidecode
 flask-script
 psycopg2
+gunicorn3
