@@ -6,10 +6,8 @@ from flask_table import Table, Col
 from views import views_api
 from models import db, Usuario
 from flask_login import LoginManager
-from flask_fontawesome import FontAwesome
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='')
-fa = FontAwesome(app)
 app.config.from_pyfile('config.py')
 db.init_app(app)
 app.register_blueprint(views_api)
