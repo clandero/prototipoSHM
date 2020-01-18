@@ -19,9 +19,38 @@
           background-image: url(/static/images/index1.jpeg);
       }
   }
+  
 </style>
-<div class="bg" style="min-height: 100%; align-items: center;justify-content: center;">
+
+<script>
+  function getValue(){
+    var shownVal = document.getElementById("autocomplete").value;
+    var value2send = document.querySelector("#estructuras" + " option[value='" + shownVal + "']").dataset.value;
+    print(value2send);
+  }
+</script>
+
+
+<div class="bg" style="min-height: 100%; align-items: center;justify-content: center;">  
   <div class="container py-5">
+    <form method="POST" action="{{url_for('views_api.buscar_estructura')}}" autocomplete="off">
+      <div class="row">
+        <div class="col-11" style="padding-right: 0%;">
+          <input id="autocomplete" type="text" name="autocomplete" placeholder="Buscar estructura por nombre" style="width: 100%; height: 100%;" required list="estructuras"/>
+          <datalist id="estructuras">
+            {% for i in puentes %}
+              <option data-value="{{i.id}}">{{i.id}} - {{ i.nombre }} - {{ i.provincia }}, {{ i.region }}</option>
+            {% endfor %}    
+          </datalist>
+        </div>
+        <div class="col-1" style="padding-left: 0%;">
+          <button id="searchBtn"  onclick="getValue()" style=" width: 100%;" type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+        </div>
+      </div>
+    </form>
+
+    <br>
+
     <div class="jumbotron">
       <h1 class="title">
         Bienvenido, {{ current_user.nombre }} {{ current_user.apellido }}!

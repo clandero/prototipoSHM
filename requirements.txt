@@ -9,3 +9,4 @@ Unidecode
 flask-script
 psycopg2
 gunicorn
+Flask-FontAwesome

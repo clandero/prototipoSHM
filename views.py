@@ -5,6 +5,7 @@ from models import *
 from flask_login import login_user, login_required, current_user, logout_user
 import sys
 import sqlalchemy
+from sqlalchemy import or_
 import json
 import os
 from datetime import datetime
@@ -15,13 +16,20 @@ views_api = Blueprint('views_api',__name__)
 #PERMISOS = TODOS
 @views_api.route('/')
 def index():
-    return render_template('index.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('views_api.profile'))
+    else:
+        return render_template('login.html')
 
 #PERMISOS = TODOS
 @views_api.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html')
+    puentes = Estructura.query.all()
+    context = {
+        'puentes' : puentes
+    }
+    return render_template('profile.html', **context)
 
 @views_api.route('/acceso_restringido')
 def usuario_no_autorizado():
@@ -96,7 +104,7 @@ def signup_post():
 @login_required
 def logout():
     logout_user()
-    return render_template('index.html')
+    return render_template('login.html')
 
 #PERMISOS = TODOS
 @views_api.route('/estructura/<int:id>')
@@ -224,7 +232,14 @@ def obtener_lecturas(sensor):
         return res
     except Exception as e:
         return render_template('usuario_no_autorizado.html')
-    
+
+@views_api.route('/buscar_estructura', methods=['POST'])
+def buscar_estructura():
+    try:
+        x = request.form.get('autocomplete').split()[0]
+        return redirect(url_for('views_api.informacion_estructura', id=x))
+    except Exception as e:
+        return render_template('estructura_no_existe.html')
 
 
 #PERMISOS = Administrador, analista

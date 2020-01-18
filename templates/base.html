@@ -4,6 +4,7 @@
 <html>
 
 <head>
+    {{ fontawesome_html() }}
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -68,8 +69,14 @@
             </a>
         {% endif %}
         {% if current_user.is_authenticated %}
-            <a href="{{ url_for('views_api.logout') }}" class="navbar-item">
-                Cerrar Sesión
+            <a href="{{url_for('views_api.grupos_usuario')}}" class="navbar-item">
+              Mis Sensores
+            </a>
+            <a href="{{url_for('views_api.informes_monitoreo_usuario')}}" class="navbar-item">
+              Mis Informes
+            </a>
+            <a href="{{ url_for('views_api.logout') }}" style="float: right;" class="navbar-item">
+              Cerrar Sesión
             </a>
         {% endif %}
     </div>
