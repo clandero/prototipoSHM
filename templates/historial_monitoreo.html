@@ -1,34 +1,52 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid px-5 py-5">
-    <h1 class="title py-3">Historial de monitoreo en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
-    <div class="row">
-        {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
-            <div class="col-md-2">
-                <form action="{{url_for('views_api.actualizar_estado_monitoreo',id=id_puente)}}">
-                    <button class="btn btn-secondary btn-sm">Actualizar Estado</button>
-                </form>
-            </div>
-        {% endif %}
-    </div>
-    <div class="row py-3">
-        <table class="table table-striped table-hover clickable-row sortable">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Condición</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in estados_monitoreo %}
-                <tr>
-                    <td>{{i.fecha_estado}}</td>
-                    <td>{{i.estado}}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<style>
+    table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+table td {
+    border: 1px solid #ccc;
+}
+table .absorbing-column {
+    width: 100%;
+}
+.btn{
+    width: 100%;
+}
+</style>
+<div class="bg" style="padding-top: 55px; height: 100%;">
+    <div class="container px-5 py-5">
+        <h1 class="title py-3">Historial de monitoreo en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
+        <div class="row">
+            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
+                <div class="col-md-2">
+                    <form action="{{url_for('views_api.actualizar_estado_monitoreo',id=id_puente)}}">
+                        <button class="btn btn-secondary btn-sm">Actualizar Estado</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+        <div class="row py-3 table-responsive">
+            <table class="table table-striped table-hover clickable-row sortable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Condición</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in estados_monitoreo %}
+                    <tr>
+                        <td>{{i.fecha_estado.strftime('%Y-%m-%d %H:%M:%S')}}</td>
+                        <td>{{i.estado}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

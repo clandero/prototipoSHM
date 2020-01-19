@@ -1,59 +1,77 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid px-5 py-5">
-    <div class="py-3">
-        <h1 class="title">Actualizar grupo de sensores "{{nombre_grupo}}"</h1>
-        <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
-    </div>
-    <div class="row py-3">
-        <div class="column is-12">
-            <form action="{{url_for('views_api.editar_grupo',id=id_grupo)}}" method="POST">
-                <div class="field">
-                    <div class="control">
-                        Nombre: <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" value="{{nombre_grupo}}" required>
+<style>
+    table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+table td {
+    border: 1px solid #ccc;
+}
+table .absorbing-column {
+    width: 100%;
+}
+.btn{
+    width: 100%;
+}
+</style>
+<div class="bg" style="padding-top: 55px; height: 100%;">
+    <div class="container px-5 py-5">
+        <div class="py-3">
+            <h1 class="title">Actualizar grupo de sensores "{{nombre_grupo}}"</h1>
+            <h2 class="subtitle">Escoja los sensores a incluir en el grupo</h2>    
+        </div>
+        <div class="row py-3">
+            <div class="column is-12">
+                <form action="{{url_for('views_api.editar_grupo',id=id_grupo)}}" method="POST">
+                    <div class="field">
+                        <div class="control">
+                            Nombre: <input class="input" type="text" name="nombre_grupo" placeholder="Nombre del grupo" value="{{nombre_grupo}}" required>
+                        </div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="control">
-                        <table class="table table-striped table-hover clickable-row sortable">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th></th>
-                                    <th>Tipo de sensor</th>
-                                    <th>Estructura</th>
-                                    <th>Zona</th>                    
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for i in sensores_disponibles %}
-                                    {% if i.es_activo == True %}
-                                        <tr>
-                                            <td>
-                                                <label class="checkbox">
-                                                    {% if i in sensores_del_grupo %}
-                                                        <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}" checked>
-                                                    {% else %}
-                                                        <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}">
-                                                    {% endif %}
-                                                </label>
-                                            </td>
-                                            <td>{{i.tipo_sensor}}</td>
-                                            <td>{{i.tipo_activo}} {{i.nombre}}</td>
-                                            <td>{{i.descripcion}}</td>
-                                        </tr>
-                                    {% endif %}
-                                {% endfor %}
-                            </tbody>        
-                        </table>
+                    <div class="field">
+                        <div class="control table-responsive">
+                            <table class="table table-striped table-hover clickable-row sortable">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th></th>
+                                        <th>Tipo de sensor</th>
+                                        <th>Estructura</th>
+                                        <th>Zona</th>                    
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for i in sensores_disponibles %}
+                                        {% if i.es_activo == True %}
+                                            <tr>
+                                                <td>
+                                                    <label class="checkbox">
+                                                        {% if i in sensores_del_grupo %}
+                                                            <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}" checked>
+                                                        {% else %}
+                                                            <input type="checkbox" name="sensores_elegidos" value="{{ i.id }}">
+                                                        {% endif %}
+                                                    </label>
+                                                </td>
+                                                <td>{{i.tipo_sensor}}</td>
+                                                <td>{{i.tipo_activo}} {{i.nombre}}</td>
+                                                <td>{{i.descripcion}}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>        
+                            </table>
+                        </div>
                     </div>
-                </div>
-                <div class="field is-grouped">
-                    <div class="control">
-                        <button type="submit" class="button is-block is-info is-fullwidth">Actualizar</button>
+                    <div class="field is-grouped">
+                        <div class="control">
+                            <button type="submit" class="button is-block is-info is-fullwidth">Actualizar</button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 </div>

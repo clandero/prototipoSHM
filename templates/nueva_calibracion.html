@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="px-5 py-5">    
-    <div class="column is-4 is-offset-4">
-        <h3 class="title">Nueva calibración para {{tipo_sensor}} N° {{id_sensor}}</h3>
-        <div class="box">
-            <form action="{{url_for('views_api.nueva_calibracion_post',x=id_sensor)}}" method="POST">
-                <!--Nueva calibracion-->
-                <div class="field">
-                    <div class="control">
-                        <input class="input" type="text" name="nueva_calibracion" placeholder="Detalles nueva calibración">
+<div class="bg" style="padding-top: 55px; height: 100%;">
+    <div class="px-5 py-5">    
+        <div class="column is-4 is-offset-4">
+            <h3 class="title">Nueva calibración para {{tipo_sensor}} N° {{id_sensor}}</h3>
+            <div class="box">
+                <form action="{{url_for('views_api.nueva_calibracion_post',x=id_sensor)}}" method="POST">
+                    <!--Nueva calibracion-->
+                    <div class="field">
+                        <div class="control">
+                            <input class="input" type="text" name="nueva_calibracion" placeholder="Detalles nueva calibración">
+                        </div>
                     </div>
-                </div>
-                <button class="button is-block is-info is-fullwidth">Actualizar</button>
-            </form>    
+                    <button class="button is-block is-info is-fullwidth">Actualizar</button>
+                </form>    
+            </div>
         </div>
     </div>
 </div>

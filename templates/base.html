@@ -13,73 +13,70 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <style>
-        body {
-          margin: 0;
-          font-family: Arial, Helvetica, sans-serif;
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.Default.css" integrity="sha256-LWhzWaQGZRsWFrrJxg+6Zn8TT84k0/trtiHBc6qcGpY=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/MarkerCluster.css" integrity="sha256-+bdWuWOXMFkX0v9Cvr3OWClPiYefDQz9GGZP/7xZxdc=" crossorigin="anonymous" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.4.1/leaflet.markercluster.js" integrity="sha256-WL6HHfYfbFEkZOFdsJQeY7lJG/E5airjvqbznghUzRw=" crossorigin="anonymous"></script>
+    <script src="https://kit.fontawesome.com/a42855b0a0.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script>
+      function myFunction() {
+        var x = document.getElementById("myTopnav");
+        if (x.className === "topnav") {
+          x.className += " responsive";
+        } else {
+          x.className = "topnav";
         }
-        
-        .topnav {
-          overflow: hidden;
-          background-color: black;
-        }
-        
-        .topnav a {
-          float: left;
-          display: block;
-          color: white;
-          text-align: center;
-          padding: 14px 16px;
-          text-decoration: none;
-          font-size: 17px;
-        }
-        
-        .topnav a:hover {
-          background-color: #ddd;
-          color: black
-        }
-        
-        .topnav a.active {
-          background-color: #4CAF50;
-          color: white;
-        }
-        
-        .topnav .icon {
-          display: none;
-        }
-
-    </style>        
+      }
+    </script>
+    {{ JSGlue.include() }}
+</head>       
 <body>
-    <div class="topnav">
-        <a href="{{ url_for('views_api.index') }}" class="navbar-item" style="background-color: white;">
-            <img src="/static/images/logoSHMchile.png">
-        </a>
-        {% if current_user.is_authenticated %}
-            <a href="{{ url_for('views_api.profile') }}" class="navbar-item">
-                Perfil
-            </a>
-        {% endif %}
-        {% if not current_user.is_authenticated %}
-            <a href="{{ url_for('views_api.login') }}" class="navbar-item">
-                Acceder
-            </a>
-            <a href="{{ url_for('views_api.signup') }}" class="navbar-item">
-                Registrarse
-            </a>
-        {% endif %}
-        {% if current_user.is_authenticated %}
-            <a href="{{url_for('views_api.grupos_usuario')}}" class="navbar-item">
-              Mis Sensores
-            </a>
-            <a href="{{url_for('views_api.informes_monitoreo_usuario')}}" class="navbar-item">
-              Mis Informes
-            </a>
-            <a href="{{ url_for('views_api.logout') }}" style="float: right;" class="navbar-item">
-              Cerrar Sesión
-            </a>
-        {% endif %}
-    </div>
-
+    <nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark" style="padding:0;">
+      <a href="{{ url_for('views_api.index') }}" style="background-color: white; height: 52px;height: 52px;">
+        <img src="/static/images/logoSHMchile.png" class="py-2" style="width: 50%; display: block; margin-left: auto; margin-right: auto; width: 50%;">
+      </a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-nav" aria-controls="navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse dual-nav order-1 order-md-0">
+        <ul class="navbar-nav">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link px-3" href="{{ url_for('views_api.profile') }}">Perfil</a>
+            </li>
+          {% endif %}
+          {% if not current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link px-3" href="{{ url_for('views_api.login') }}">Acceder</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link px-3" href="{{ url_for('views_api.signup') }}">Registrarse</a>
+            </li>
+          {% endif%}
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link px-3" href="{{url_for('views_api.grupos_usuario')}}">Mis sensores</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link px-3" href="{{url_for('views_api.informes_monitoreo_usuario')}}">Mis informes</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="navbar-collapse collapse dual-nav order-4 order-md-4 justify-content-end">
+        <ul class="navbar-nav">
+          {% if current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link px-3 text-right" href="{{ url_for('views_api.logout') }}">Cerrar sesión</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
     {% block content %}
     {% endblock %}
 </body>

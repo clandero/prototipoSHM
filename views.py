@@ -26,8 +26,14 @@ def index():
 @login_required
 def profile():
     puentes = Estructura.query.all()
+    markers = []
+    for i in puentes:
+        #url = "url_for('views_api.informacion_estructura', id="+str(i.id)+")"
+        markers.append([i.coord_x, i.coord_y, i.tipo_activo+' '+i.nombre, i.id])
+    print(markers)
     context = {
-        'puentes' : puentes
+        'puentes' : puentes,
+        'markers' : markers
     }
     return render_template('profile.html', **context)
 
@@ -64,7 +70,10 @@ def obtener_nombre_y_activo(id_puente):
 
 @views_api.route('/login')
 def login():
-    return render_template('login.html')
+    if current_user.is_authenticated:
+        return redirect(url_for('views_api.profile'))
+    else:
+        return render_template('login.html')
 
 @views_api.route('/login', methods=['POST'])
 def login_post():

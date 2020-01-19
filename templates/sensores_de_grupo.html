@@ -1,50 +1,68 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid px-5 py-5">
-    <h1 class="title py-3">Sensores del grupo "{{nombre_grupo}}"</h1>
-    <div class="row py-3">
-        <table class="table table-striped table-hover clickable-row sortable">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Tipo de sensor</th>
-                    <th>Estructura</th>
-                    <th>Zona</th>
-                    <th>Añadido en</th>
-                    <th></th> 
-                    <th></th> 
-                    <th></th>                     
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in sensores %}
+<style>
+    table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+table td {
+    border: 1px solid #ccc;
+}
+table .absorbing-column {
+    width: 100%;
+}
+.btn{
+    width: 100%;
+}
+</style>
+<div class="bg" style="padding-top: 55px; height: 100%;">
+    <div class="container px-5 py-5">
+        <h1 class="title py-3">Sensores del grupo "{{nombre_grupo}}"</h1>
+        <div class="row py-3 table-responsive">
+            <table class="table table-striped table-hover clickable-row sortable">
+                <thead class="thead-dark">
                     <tr>
-                        <td>{{i.tipo_sensor}}</td>
-                        <td>{{i.tipo_activo}} {{i.nombre}}</td>
-                        <td>{{i.descripcion}}</td>
-                        <td>{{i.fecha_creacion}} Hz</td>
-                        {% if current_user.permisos != 'Visita' %}
-                            <td>
-                                <form action="{{url_for('views_api.obtener_lecturas',sensor=i.id)}}" method="GET">
-                                    <button class="btn btn-secondary btn-sm" type="submit" id="lecturas" value="{{i.id}}">Lecturas</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="{{url_for('views_api.historial_estado_sensor',id_sensor=i.id_sensor)}}" method="GET">
-                                    <button class="btn btn-secondary btn-sm" type="submit" id="historial" value="{{i.id_sensor}}">Historial</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="{{url_for('views_api.historial_calibraciones_sensor',x=i.id_sensor)}}" method="GET">
-                                    <button class="btn btn-secondary btn-sm" type="submit" id="calibraciones" value="{{i.id_sensor}}">Calibraciones</button>
-                                </form>
-                            </td>
-                        {% endif %}
+                        <th>Tipo de sensor</th>
+                        <th>Estructura</th>
+                        <th>Zona</th>
+                        <th>Añadido en</th>
+                        <th></th> 
+                        <th></th> 
+                        <th></th>                     
                     </tr>
-                    
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for i in sensores %}
+                        <tr>
+                            <td>{{i.tipo_sensor}}</td>
+                            <td>{{i.tipo_activo}} {{i.nombre}}</td>
+                            <td>{{i.descripcion}}</td>
+                            <td>{{i.fecha_creacion}} Hz</td>
+                            {% if current_user.permisos != 'Visita' %}
+                                <td>
+                                    <form action="{{url_for('views_api.obtener_lecturas',sensor=i.id)}}" method="GET">
+                                        <button class="btn btn-secondary btn-sm" type="submit" id="lecturas" value="{{i.id}}">Lecturas</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="{{url_for('views_api.historial_estado_sensor',id_sensor=i.id_sensor)}}" method="GET">
+                                        <button class="btn btn-secondary btn-sm" type="submit" id="historial" value="{{i.id_sensor}}">Historial</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="{{url_for('views_api.historial_calibraciones_sensor',x=i.id_sensor)}}" method="GET">
+                                        <button class="btn btn-secondary btn-sm" type="submit" id="calibraciones" value="{{i.id_sensor}}">Calibraciones</button>
+                                    </form>
+                                </td>
+                            {% endif %}
+                        </tr>
+                        
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

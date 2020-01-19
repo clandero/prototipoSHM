@@ -1,70 +1,88 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid px-5 py-5">
-    <h1 class="title py-3">Hallazgos en informe N° {{id_informe}}</h1>
-    <div class="row">
-        <div class="col-md-2">
-            <form action="{{url_for('views_api.agregar_hallazgo',id_informe = id_informe)}}", method="GET">
-                <button class="btn btn-secondary btn-sm">Añadir Hallazgo</button>
-            </form> 
+<style>
+    table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+table td {
+    border: 1px solid #ccc;
+}
+table .absorbing-column {
+    width: 100%;
+}
+.btn{
+    width: 100%;
+}
+</style>
+<div class="bg" style="padding-top: 55px; height: 100%;">
+    <div class="container px-5 py-5">
+        <h1 class="title py-3">Hallazgos en informe N° {{id_informe}}</h1>
+        <div class="row">
+            <div class="col-md-2">
+                <form action="{{url_for('views_api.agregar_hallazgo',id_informe = id_informe)}}", method="GET">
+                    <button class="btn btn-secondary btn-sm">Añadir Hallazgo</button>
+                </form> 
+            </div>
         </div>
-    </div>
-    <div class="row py-3">
-        <table class="table table-striped table-hover clickable-row sortable">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Detalle del hallazgo</th>
-                    <th>Fecha</th>
-                    <th>Zona de estructura</th>
-                    <th></th>                   
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in hallazgos %}
-                <tr>
-                    <td>{{i['hallazgo'].detalle_hallazgo}}</td>
-                    <td>{{i['hallazgo'].fecha.strftime('%Y-%m-%d %H:%M:%S')}}</td>
-                    <td>{{i['hallazgo'].descripcion}}</td>
-                    <td>
-                        {% if i['material_apoyo'] %}
-                            <button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#ImageModal{{i['hallazgo'].id}}">Imagenes</button>
-                            <div width="100%" height="100%" class="modal fade" id="ImageModal{{i['hallazgo'].id}}" tabindex="-1" role="dialog" aria-labelledby="ImageModal{{i['hallazgo'].id}}Label" aria-hidden="true">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
-                                                <div class="carousel-inner">
-                                                    {% for j in i['material_apoyo'] %}
-                                                        <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
-                                                            <img class="d-block w-100" src="/static/images/{{j.ruta_acceso_archivo}}" alt="#">
-                                                        </div>    
-                                                    {% endfor %}
+        <div class="row py-3 table-responsive">
+            <table class="table table-striped table-hover clickable-row sortable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Detalle del hallazgo</th>
+                        <th>Fecha</th>
+                        <th>Zona de estructura</th>
+                        <th></th>                   
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in hallazgos %}
+                    <tr>
+                        <td>{{i['hallazgo'].detalle_hallazgo}}</td>
+                        <td>{{i['hallazgo'].fecha.strftime('%Y-%m-%d %H:%M:%S')}}</td>
+                        <td>{{i['hallazgo'].descripcion}}</td>
+                        <td>
+                            {% if i['material_apoyo'] %}
+                                <button class="btn btn-secondary btn-sm" data-toggle="modal" data-target="#ImageModal{{i['hallazgo'].id}}">Imagenes</button>
+                                <div width="100%" height="100%" class="modal fade" id="ImageModal{{i['hallazgo'].id}}" tabindex="-1" role="dialog" aria-labelledby="ImageModal{{i['hallazgo'].id}}Label" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
+                                                    <div class="carousel-inner">
+                                                        {% for j in i['material_apoyo'] %}
+                                                            <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+                                                                <img class="d-block w-100" src="/static/images/{{j.ruta_acceso_archivo}}" alt="#">
+                                                            </div>    
+                                                        {% endfor %}
+                                                    </div>
+                                                    <a class="carousel-control-prev" href="#carouselExampleSlidesOnly" role="button" data-slide="prev">
+                                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                        <span class="sr-only">Previous</span>
+                                                    </a>
+                                                    <a class="carousel-control-next" href="#carouselExampleSlidesOnly" role="button" data-slide="next">
+                                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                        <span class="sr-only">Next</span>
+                                                    </a>
                                                 </div>
-                                                <a class="carousel-control-prev" href="#carouselExampleSlidesOnly" role="button" data-slide="prev">
-                                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                                    <span class="sr-only">Previous</span>
-                                                </a>
-                                                <a class="carousel-control-next" href="#carouselExampleSlidesOnly" role="button" data-slide="next">
-                                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                                    <span class="sr-only">Next</span>
-                                                </a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

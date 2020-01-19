@@ -6,8 +6,12 @@ from flask_table import Table, Col
 from views import views_api
 from models import db, Usuario
 from flask_login import LoginManager
+from flask_jsglue import JSGlue
+
+jsglue = JSGlue()
 
 app = Flask(__name__, template_folder='templates', static_folder='static', static_url_path='')
+jsglue.init_app(app)
 app.config.from_pyfile('config.py')
 db.init_app(app)
 app.register_blueprint(views_api)
