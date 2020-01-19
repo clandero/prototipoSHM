@@ -60,7 +60,7 @@ table .absorbing-column {
                         <th>Fecha creación</th>
                         <th></th>
                         <th></th>
-                        <th></th>
+
                     </tr>
                 </thead>
                 <tbody>
@@ -79,11 +79,7 @@ table .absorbing-column {
                                 <button class="btn btn-secondary btn-sm" type="submit" id="eliminar" value="{{i.id_informe}}">Hallazgos</button>
                             </form>
                         </td>
-                        <td>
-                            <form action="{{url_for('views_api.eliminar_informe',id=i.id_informe)}}" method="POST">
-                                <button class="btn btn-danger btn-sm" type="submit" id="eliminar" value="{{i.id_informe}}">Eliminar</button>
-                            </form>
-                        </td>
+                        
                     </tr>
                     {% endfor %}
                 </tbody>

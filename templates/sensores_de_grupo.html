@@ -39,7 +39,7 @@ table .absorbing-column {
                             <td>{{i.tipo_sensor}}</td>
                             <td>{{i.tipo_activo}} {{i.nombre}}</td>
                             <td>{{i.descripcion}}</td>
-                            <td>{{i.fecha_creacion}} Hz</td>
+                            <td>{{i.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S')}}</td>
                             {% if current_user.permisos != 'Visita' %}
                                 <td>
                                     <form action="{{url_for('views_api.obtener_lecturas',sensor=i.id)}}" method="GET">
