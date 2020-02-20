@@ -29,7 +29,7 @@ def profile():
     markers = []
     for i in puentes:
         #url = "url_for('views_api.informacion_estructura', id="+str(i.id)+")"
-        markers.append([i.coord_x, i.coord_y, i.tipo_activo+' '+i.nombre, i.id])
+        markers.append([i.coord_x, i.coord_y, i.tipo_activo.capitalize()+' '+i.nombre.capitalize(), i.id])
     print(markers)
     context = {
         'puentes' : puentes,
