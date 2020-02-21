@@ -1,89 +1,37 @@
 {% extends "base.html" %}
 
-{% block content %}
-<style>
-  #map {
-        min-height: 450px;
-        height: 100%; 
-    }
-  body, html{
-      height: 100%;
-      margin: 0;
-  }
-  .bg {
-      background-image: url(/static/images/index1.jpeg);
-      background-position: center center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      background-size: cover;
-      background-color:#464646;
-  }
-  @media only screen and (max-width: 767px) {
-      .bg {
-          background-image: url(/static/images/index1.jpeg);
-      }
-  }
-  
-</style>
-
-<script>
-  function getValue(){
-    var shownVal = document.getElementById("autocomplete").value;
-    var value2send = document.querySelector("#estructuras" + " option[value='" + shownVal + "']").dataset.value;
-    print(value2send);
-  }
-</script>
-
-<div class="bg" style="padding-top: 55px; height: 100%; align-items: center;justify-content: center; overflow: hidden;">  
-  <div class="container py-5" style="height:90%;">
-    <form method="POST" action="{{url_for('views_api.buscar_estructura')}}" autocomplete="off">
-      <div class="row">
-        <div class="col-10" style="padding-right: 0%;">
-          <input id="autocomplete" type="text" name="autocomplete" placeholder="Buscar estructura por nombre" style="width: 100%; height: 100%;" required list="estructuras"/>
-          <datalist id="estructuras">
-            {% for i in puentes %}
-              <option data-value="{{i.id}}">{{i.id}} - {{ i.nombre }} - {{ i.provincia }}, {{ i.region }}</option>
-            {% endfor %}    
-          </datalist>
-        </div>
-        <div class="col-2" style="padding-left: 0%;">
-          <button id="searchBtn"  onclick="getValue()" style=" width: 100%;" type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
-        </div>
-      </div>
-    </form>
-    <br>
-    <!--div class="jumbotron">
-      <h1 class="title">
-        Bienvenido, {{ current_user.nombre }} {{ current_user.apellido }}!
-      </h1>
-      <h2 class="subtitle">
-        Permisos: {{ current_user.permisos }}
-      </h2>
-      <div class="btn-toolbar">
-        <form action="{{url_for('views_api.grupos_usuario')}}">
-          <button class="btn btn-secondary btn-sm">Mis Grupos</button>
-        </form>
-        <form action="{{url_for('views_api.informes_monitoreo_usuario')}}">
-          <button class="btn btn-secondary btn-sm">Mis Informes de monitoreo</button>
-        </form>
-      </div>
-    </div-->
-    
-      <div id="map" style="width:100%">
-        {% block javascript %}
-          <script>
-            var mymap = L.map('map').setView([-36.906289,-72.398971],6);
-            L.tileLayer('http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}').addTo(mymap);
-            var markers = L.markerClusterGroup()
-            var puentes = {{ markers|tojson }};
-            for (var i=0; i < puentes.length; i++){
-              markers.addLayer(L.marker([puentes[i][0], puentes[i][1]]).bindPopup('<a href=\"/estructura/'+puentes[i][3]+'\">'+puentes[i][2]+'</a>'));
-            }
-            mymap.addLayer(markers);
-          </script>
-        {% endblock %}
-      </div>
-    
-  </div>
-</div>
+{% block customcss %}
+	<link href="{{ url_for('static', filename='css/profile.css') }}" rel="stylesheet">
 {% endblock %}
+
+{% block content %}
+	<div class="bg">  
+		<div class="container py-5">
+			<form method="POST" action="{{url_for('views_api.buscar_estructura')}}" autocomplete="off">
+				<div class="row no-gutters">
+					<div class="col-10">
+						<input id="autocomplete" type="text" name="autocomplete" placeholder="Buscar estructura por nombre" required list="estructuras"/>
+						<datalist id="estructuras">
+							{% for i in puentes %}
+							<option data-value="{{i.id}}">{{i.id}} - {{ i.nombre }} - {{ i.provincia }}, {{ i.region }}</option>
+							{% endfor %}    
+						</datalist>
+					</div>
+					<div class="col-2">
+						<button id="searchBtn"  onclick="getValue()" type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+					</div>
+				</div>
+			</form>
+			<br>
+			<div id="map">
+			</div>
+		</div>
+	</div>
+{% endblock %}
+
+{% block customjs %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+	<script>setMarkersOnMap({{ markers|tojson }})</script>
+{% endblock %}
+

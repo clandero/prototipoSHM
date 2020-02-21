@@ -1,0 +1,42 @@
+<nav class="navbar fixed-top navbar-expand-md navbar-dark bg-dark" style="padding:0;">
+	<a href="{{ url_for('views_api.index') }}" style="background-color: white; height: 52px;height: 52px;">
+		<img src="/static/images/logoSHMchile.png" class="py-2" style="width: 50%; display: block; margin-left: auto; margin-right: auto; width: 50%;">
+	</a>
+	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".dual-nav" aria-controls="navbarNav">
+		<span class="navbar-toggler-icon"></span>
+	</button>
+	<div class="collapse navbar-collapse dual-nav order-1 order-md-0">
+		<ul class="navbar-nav">
+		{% if current_user.is_authenticated %}
+			<li class="nav-item">
+			<a class="nav-link px-3" href="{{ url_for('views_api.profile') }}">Perfil</a>
+			</li>
+		{% endif %}
+		{% if not current_user.is_authenticated %}
+			<li class="nav-item">
+			<a class="nav-link px-3" href="{{ url_for('views_api.login') }}">Acceder</a>
+			</li>
+			<li class="nav-item">
+			<a class="nav-link px-3" href="{{ url_for('views_api.signup') }}">Registrarse</a>
+			</li>
+		{% endif%}
+		{% if current_user.is_authenticated %}
+			<li class="nav-item">
+			<a class="nav-link px-3" href="{{url_for('views_api.grupos_usuario')}}">Mis sensores</a>
+			</li>
+			<li class="nav-item">
+			<a class="nav-link px-3" href="{{url_for('views_api.informes_monitoreo_usuario')}}">Mis informes</a>
+			</li>
+		{% endif %}
+		</ul>
+	</div>
+	<div class="navbar-collapse collapse dual-nav order-4 order-md-4 justify-content-end">
+		<ul class="navbar-nav">
+		{% if current_user.is_authenticated %}
+			<li class="nav-item">
+			<a class="nav-link px-3 text-right" href="{{ url_for('views_api.logout') }}">Cerrar sesión</a>
+			</li>
+		{% endif %}
+		</ul>
+	</div>
+</nav>

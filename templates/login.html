@@ -2,59 +2,44 @@
 
 {% extends "base.html" %}
 
-{% block content %}
-<style>
-    body, html{
-        height: 100%;
-        margin: 0;
-    }
-    .bg {
-        background-image: url(/static/images/index1.jpeg);
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-        background-color:#464646;
-    }
-    @media only screen and (max-width: 767px) {
-        .bg {
-            background-image: url(/static/images/index1.jpeg);
-        }
-    }
-    h1{
-        text-align: center;
-    }
-</style>
-<div class="bg" style="min-height: 100%; display: flex;align-items: center;justify-content: center;">
-    <div class="box">
-        <h3 class="title">Acceder</h3>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="notification is-danger">
-                {{ messages[0] }}
-            </div>
-        {% endif %}
-        {% endwith %}
-        <form method="POST" action="/login">
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="email" name="email" placeholder="Correo" autofocus="">
-                </div>
-            </div>
+{% block customcss %}
+	<link href="{{ url_for('static', filename='css/profile.css') }}" rel="stylesheet">
+{% endblock %}
 
-            <div class="field">
-                <div class="control">
-                    <input class="input is-large" type="password" name="password" placeholder="Contraseña">
+{% block content %}
+    <div class="loginbox">
+        <div class="box">
+            <h3 class="title">
+                Acceder
+            </h3>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="notification is-danger">
+                        {{ messages[0] }}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <form method="POST" action="/login">
+                <div class="field">
+                    <div class="control">
+                        <input class="input is-large" type="email" name="email" placeholder="Correo" autofocus="">
+                    </div>
                 </div>
-            </div>
-            <div class="field">
-                <label class="checkbox">
-                    <input type="checkbox">
-                    Mantener la sesión iniciada
-                </label>
-            </div>
-            <button class="button is-block is-info is-large is-fullwidth">Iniciar sesión</button>
-        </form>
+
+                <div class="field">
+                    <div class="control">
+                        <input class="input is-large" type="password" name="password" placeholder="Contraseña">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox"> Mantener la sesión iniciada
+                    </label>
+                </div>
+                <button class="button is-block is-info is-large is-fullwidth">
+                    Iniciar sesión
+                </button>
+            </form>
+        </div>
     </div>
-</div>
 {% endblock %}
