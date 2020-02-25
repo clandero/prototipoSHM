@@ -1,0 +1,42 @@
+<table class="table table-striped table-hover clickable-row sortable">
+    <thead class="thead-dark">
+        <tr>
+            <th>Características</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Largo</td>
+            <td>{{ datos_puente.largo }} metros</td>
+        </tr>
+        <tr>
+            <td>Ancho total</td>
+            <td>{{ datos_puente.ancho_total }} metros</td>
+        </tr>
+        <tr>
+            <td>Estribo</td>
+            <td>{{ datos_puente.mat_estrib }}</td>
+        </tr>
+        <tr>
+            <td>Cepas</td>
+            {% if datos_puente.num_cepas > 0 %}
+                {% if datos_puente.mat_cepas != 'N/A' and datos_puente.mat_cepas != 'S/I'%}    
+                    <td>{{ datos_puente.num_cepas|int }} cepa(s) de {{ datos_puente.mat_cepas }}</td>
+                {% else %}
+                    <td>{{datos_puente.num_cepas|int}} cepa(s)</td>
+                {% endif %}
+            {% else %}
+                <td>{{datos_puente.mat_cepas}}</td>
+            {% endif %}
+        </tr>
+        <tr>
+            <td>Piso</td>
+            <td>{{ datos_puente.piso }}</td>
+        </tr>
+        <tr>
+            <td>Vigas</td>
+            <td>{{ datos_puente.mat_vigas }}</td>
+        </tr>
+    </tbody>
+</table>

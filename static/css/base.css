@@ -1,0 +1,16 @@
+.navbar{
+    padding: 0%;
+}
+
+#logo-link{
+    background-color: white; 
+    height: 52px;
+    height: 52px;
+}
+
+#shm-logo{
+    display: block; 
+    margin-left: auto; 
+    margin-right: auto; 
+    width: 50%;
+}

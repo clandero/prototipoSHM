@@ -1,0 +1,25 @@
+{% if imagenes_estructura != None %}
+    <div id="carouselExampleSlidesOnly" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+            {% if imagenes_estructura%}
+                {% for i in imagenes_estructura %}
+                    <div class="carousel-item{% if loop.index == 1 %} active{% endif %}">
+                        <img id="bridge-img" class="d-block" src="/static/images/{{i.ruta_acceso_archivo}}" alt="{{i.descripcion}}">
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="carousel-item active">
+                    <img id="img-not-available" class="d-block" src="/static/images/imagen_no_disponible.png" alt="f">
+                </div>
+            {% endif %}
+        </div>
+        <a class="carousel-control-prev" href="#carouselExampleSlidesOnly" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleSlidesOnly" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+{% endif %}

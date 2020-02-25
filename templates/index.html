@@ -1,37 +1,16 @@
-<!-- templates/index.html -->
-
 {% extends "base.html" %}
 
+{% block customcss %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/profile.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<style>
-    body, html{
-        height: 100%;
-        margin: 0;
-    }
-    .bg {
-        background-image: url(/static/images/index1.jpeg);
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-        background-color:#464646;
-    }
-    @media only screen and (max-width: 767px) {
-        .bg {
-            background-image: url(/static/images/index1.jpeg);
-        }
-    }
-    h1{
-        text-align: center;
-    }
-</style>
-<div class="bg" style="padding-top: 55px; height: 100%; align-items: center;justify-content: center;">
+<div class="bg">
     <br>
     <br>
     <br>
     <br>
-    
     <h1 class="title" style="color: white; font-size:60px;">Plataforma de Monitoreo SHM</h1>
-    
 </div>
 {% endblock %}

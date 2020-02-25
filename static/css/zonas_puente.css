@@ -1,0 +1,14 @@
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+table td {
+    border: 1px solid #ccc;
+}
+table .absorbing-column {
+    width: 100%;
+}
+.btn{
+    width: 100%;
+}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg" style="padding-top: 55px; height: 100%;">
+<div class="bg">
     <div class="px-5 py-5">    
         <div class="column is-4 is-offset-4">
             <h3 class="title">Actualizar estado de monitoreo para {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
@@ -10,7 +10,7 @@
                     <!--Nuevo Estado-->
                     <div class="field">
                         <div class="control">
-                            <input class="input" type="text" name="nuevo_estado" placeholder="Nuevo estado">
+                            <input class="form-control" type="text" name="nuevo_estado" placeholder="Nuevo estado">
                         </div>
                     </div>
                     <button class="button is-block is-info is-fullwidth">Actualizar</button>

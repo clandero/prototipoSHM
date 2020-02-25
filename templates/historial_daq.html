@@ -1,23 +1,12 @@
 {% extends "base.html" %}
 
+{% block customcss %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/tabla_estructura.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<style>
-    table {
-    table-layout: auto;
-    border-collapse: collapse;
-    width: 100%;
-}
-table td {
-    border: 1px solid #ccc;
-}
-table .absorbing-column {
-    width: 100%;
-}
-.btn{
-    width: 100%;
-}
-</style>
-<div class="bg" style="padding-top: 55px; height: 100%;">
+<div class="bg">
     <div class="container px-5 py-5">
         <h1 class="title py-3">Historial de DAQ N° {{ id_daq }} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
         <div class="row">

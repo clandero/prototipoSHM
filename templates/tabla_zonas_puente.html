@@ -1,0 +1,38 @@
+<table class="table table-striped table-hover clickable-row sortable">
+    <thead class="thead-dark">
+        <tr>
+            <th>Tipo de zona</th>
+            <th>Descripción</th>
+            <th>Material</th>
+            <th></th>
+            <th></th>
+            <th></th> 
+        </tr>
+    </thead>
+    <tbody>
+        {% for i in zonas_puente %}
+        <tr>
+            <td>{{i.nombre_zona}}</td>
+            <td>{{i.descripcion}}</td>
+            <td>{{i.material}}</td>
+            {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' %}
+                <td>
+                    <form action="{{url_for('views_api.daqs_de_zona',id_zona=i.id)}}">
+                        <button class="btn btn-secondary btn-sm" type="submit" id="daqs" value="{{i.id}}">DAQs</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="{{url_for('views_api.sensores_por_zona',id_zona=i.id)}}">
+                        <button class="btn btn-secondary btn-sm" type="submit" id="sensores" value="{{i.id}}">Sensores</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="{{url_for('views_api.informes_monitoreo_zona',id_zona=i.id)}}">
+                        <button class="btn btn-secondary btn-sm" type="submit" id="sensores" value="{{i.id}}">Informes de monitoreo</button>
+                    </form>
+                </td> 
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

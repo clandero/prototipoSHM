@@ -1,0 +1,33 @@
+<div class="btn-toolbar py-3">
+    {% if esta_monitoreada %}
+            <form action="{{url_for('views_api.zonas_de_estructura', id=datos_puente.id)}}">
+                <button class="btn btn-secondary btn-sm">Zonas</button>
+            </form>
+            <form action="{{url_for('views_api.sensores_de_estructura', id=datos_puente.id)}}">
+                <button class="btn btn-secondary btn-sm">Lista de Sensores</button>
+            </form>
+        {% if current_user.permisos != 'Visita' %}
+                <form action="{{url_for('views_api.historial_monitoreo_estructura', id=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Historial de monitoreo</button>
+                </form>
+                <form action="{{url_for('views_api.daqs_de_estructura', id_puente=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">DAQs</button>
+                </form>
+                <form action="{{url_for('views_api.clusters_estructura', id_puente=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Clusters</button>
+                </form>
+                <form action="{{url_for('views_api.show_3d_bim',filename = bim_estructura.ruta_acceso_archivo)}}">
+                    <button class="btn btn-secondary btn-sm">Visualización 3D</button>
+                </form>
+                <form action="{{url_for('views_api.informes_monitoreo_estructura', id_puente=datos_puente.id)}}">
+                    <button class="btn btn-secondary btn-sm">Informes de monitoreo</button>
+                </form>
+        {% endif %}
+    {% else %}
+        {% if current_user.permisos == 'Administrador' %}
+                <form action="{{ url_for('views_api.crear_monitoreo', id_puente=datos_puente.id) }}", method="POST">
+                    <button class="btn btn-secondary btn-sm">Iniciar Monitoreo</button>
+                </form>
+        {% endif %} 
+    {% endif %}
+</div>

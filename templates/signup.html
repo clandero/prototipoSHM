@@ -2,31 +2,21 @@
 
 {% extends "base.html" %}
 
-{% block content %}
-<style>
-    body, html{
-        height: 100%;
-        margin: 0;
-    }
-    .bg {
-        background-image: url(/static/images/index1.jpeg);
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-        background-color:#464646;
-    }
-    @media only screen and (max-width: 767px) {
-        .bg {
-            background-image: url(/static/images/index1.jpeg);
+{% block customcss %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/profile.css') }}" rel="stylesheet">
+    <style>
+        h1{ 
+            text-align: center; 
         }
-    }
-    h1{
-        text-align: center;
-    }
-</style>
+        .bg{ 
+            min-height:100%; display:flex;
+        }
+    </style>    
+{% endblock %}
 
-<div class="bg" style="min-height: 100%; display: flex;align-items: center;justify-content: center;">
+{% block content %}
+<div class="bg">
     <div class="box">
         <h3 class="title">Registrarse</h3>
         {% with messages = get_flashed_messages() %}
@@ -58,7 +48,7 @@
                 </div>
             </div>
             <div class="field">
-                <select class="form-control" id="permisos" name="permisos">
+                <select class="custom-select" id="permisos" name="permisos">
                     <option value="" style="display:none;">Permisos</option>
                     <option value="Administrador">Administrador</option>
                     <option value="Dueño">Dueño</option>
@@ -70,13 +60,16 @@
         </form>
     </div>
 </div>
+{% endblock %}
 
-<script>
-    $(function(){
-        $(".dropdown-menu a").click(function(){
-            $(".btn:first-child").text($(this).text());
-            $(".btn:first-child").val($(this).text());
+{% block customjs %}
+    {{ super() }}
+    <script>
+        $(function(){
+            $(".dropdown-menu a").click(function(){
+                $(".btn:first-child").text($(this).text());
+                $(".btn:first-child").val($(this).text());
+            });
         });
-    });
-</script>
+    </script>
 {% endblock %}

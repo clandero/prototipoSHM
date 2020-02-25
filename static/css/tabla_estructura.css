@@ -1,0 +1,19 @@
+#map {
+    height: 428px; 
+}
+#carouselExampleSlidesOnly{
+    min-height: 483px; 
+}
+#img-not-available{
+    width: 50%; 
+    margin: auto;
+}
+#bridge-img{
+    width: 100%; 
+    height:428px;
+}
+.btn-sm{
+    margin-left:5px;
+    margin-bottom:5px;
+    width:175px !important;
+}

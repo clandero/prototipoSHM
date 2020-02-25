@@ -1,27 +1,12 @@
 {% extends "base.html" %}
 
+{% block customcss %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='css/usuario_no_autorizado.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block content %}
-<style>
-    body, html{
-        height: 100%;
-        margin: 0;
-    }
-    .bg {
-        background-image: url(/static/images/index1.jpeg);
-        background-position: center center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        background-size: cover;
-        background-color:#464646;
-    }
-    @media only screen and (max-width: 767px) {
-        .bg {
-            background-image: url(/static/images/index1.jpeg);
-        }
-    }
-    
-  </style>
-<div class="bg" style="padding-top: 55px; height: 100%; align-items: center;justify-content: center;">
+<div class="bg">
     <div class="container px-5 py-5">
         <div class="jumbotron">
             <h1 class="title">Estructura no existe</h1>

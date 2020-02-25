@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg" style="padding-top: 55px; height: 100%;">
+<div class="bg">
     <div class="px-5 py-5">    
         <div class="column is-4 is-offset-4">
             <h3 class="title">Agregar hallazgo a informe N° {{id_informe}}</h3>
@@ -9,7 +9,7 @@
                 <form action="{{url_for('views_api.agregar_hallazgo',id_informe = id_informe)}}" method="POST" enctype = "multipart/form-data">
                     <!--Zona del puente-->
                     <div class="field">
-                        <select class="form-control" id="zona_puente" name="zona_puente">
+                        <select class="custom-select form-control" id="zona_puente" name="zona_puente">
                             <option value="" style="display:none;">Zona asociada</option>
                             {% for i in zonas_puente %}
                                 <option value="{{ i.id }}">{{ i.descripcion }}</option>
@@ -19,12 +19,15 @@
                     <!--Nuevo Hallazgo-->
                     <div class="field">
                         <div class="control">
-                            <input class="input" type="text" name="detalle" placeholder="Detalle de hallazgo">
+                            <input class="form-control" type="text" name="detalle" placeholder="Detalle de hallazgo">
                         </div>
                     </div>
-                    <div class="file-upload-wrapper">
-                        <input type="file" name="imagenes" multiple accept="image/*" id="imagenes" class="file-upload" />
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" name="imagenes" multiple accept="image/*" id="imagenes" lang="es" required>
+                        <label class="custom-file-label" for="imagenes">Escoger archivos</label>
+                        <div class="invalid-feedback">Archivo no válido</div>
                     </div>
+                    <br>
                     <br>
                     <button class="button is-block is-info is-fullwidth">Agregar</button>
                 </form>    

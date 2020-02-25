@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="bg" style="padding-top: 55px; height: 100%;">
+<div class="bg">
     <div class="px-5 py-5">
         <div class="column is-4 is-offset-4">
             <h3 class="title">Añadir sensor en Cluster N° {{id_cluster}}</h3>
@@ -9,7 +9,7 @@
                 <form action="{{url_for('views_api.agregar_sensor_cluster_post', id_cluster=id_cluster)}}" method="POST">
                     <!--Sensores disponibles-->
                     <div class="field">
-                        <select class="form-control" id="sensor" name="sensor">
+                        <select class="custom-select" id="sensor" name="sensor">
                             <option value="" style="display:none;">Sensores disponibles</option>
                             {% for i in sensores %}
                                 <option value="{{ i.id }}">{{i.nombre}} N° {{i.id}} en {{i.descripcion}}</option>  
