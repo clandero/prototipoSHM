@@ -6,7 +6,7 @@
         <div class="column is-4 is-offset-4">
             <h3 class="title">Añadir sensor en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
             <div class="box">
-                <form action="{{url_for('views_api.agregar_sensor_en_post')}}" method="POST">
+                <form action="{{url_for('views_api.agregar_sensor_en', id=id_puente)}}" method="POST">
                     <!--Zona del puente-->
                     <div class="field">
                         <select class="custom-select" id="zona_puente" name="zona_puente">

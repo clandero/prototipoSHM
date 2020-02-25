@@ -24,6 +24,7 @@ def obtener_nombre_y_activo(id_puente):
     }
     return res
 
+#Función que, dado un sensor instalado y un nombre para la nueva tabla, genera la hypertable respectiva
 def crear_tabla_sensor(id_sensor_instalado, nombre_nueva_tabla):
     actualizar_nombre_sensor = SensorInstalado.query.filter_by(id=id_sensor_instalado).first()
     actualizar_nombre_sensor.nombre_tabla = nombre_nueva_tabla
@@ -31,7 +32,6 @@ def crear_tabla_sensor(id_sensor_instalado, nombre_nueva_tabla):
     new_table = db.session.execute('CREATE TABLE IF NOT EXISTS '+nombre_nueva_tabla+'(fecha timestamp, lectura double precision, PRIMARY KEY(fecha))')
     new_hypertable = db.session.execute('SELECT create_hypertable(\''+nombre_nueva_tabla+'\', \'fecha\')')
     db.session.commit()
-
 
 #PERMISOS = TODOS
 #Redirige a la vista de Login (si no inicia sesión), o a la vista del mapa (profile.html, si inició sesión)
@@ -84,6 +84,7 @@ def crear_monitoreo(id_puente):
         #Si el usuario no está autorizado, redirige a la vista de error
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
+#Maneja el inicio de sesión, con ayuda del package "flask_login"
 @views_api.route('/login', methods=["GET","POST"])
 def login():
     if current_user.is_authenticated:
@@ -104,7 +105,7 @@ def login():
         else:
             return redirect(url_for('views_api.usuario_no_autorizado'))
 
-
+#Crea nuevos usuarios en la plataforma, requiere de correo (primary_key), nombre, apellido y permisos
 @views_api.route('/signup')
 def signup():
     if current_user.is_authenticated:
@@ -127,7 +128,7 @@ def signup():
             db.session.commit()
             return redirect(url_for('views_api.login'))
 
-
+#Cerrar sesión
 @views_api.route('/logout')
 @login_required
 def logout():
@@ -135,16 +136,20 @@ def logout():
     return render_template('login.html')
 
 #PERMISOS = TODOS
+#Muestra el detalle de una estructura, dado el id del puente en la BD
 @views_api.route('/estructura/<int:id>')
 @login_required
 def informacion_estructura(id):
+    #Detalles generales de la estructura
     estructura = Estructura.query.filter_by(id=id).first()
     estado_monitoreo = EstadoMonitoreo.query.filter_by(id_estructura = id).order_by(EstadoMonitoreo.fecha_estado.desc()).first()
-    x = estructura.nombre.lower().replace(" ","_")
-    check_schema = db.session.execute("""SELECT * FROM pg_catalog.pg_namespace WHERE nspname = \'"""+x+"""\'""").fetchone()
+    #Revisa si el schema del puente existe, de no ser así, es por que no está siendo monitoreada
+    nombre_del_schema = estructura.nombre.lower().replace(" ","_")
+    check_schema = db.session.execute("""SELECT * FROM pg_catalog.pg_namespace WHERE nspname = \'"""+nombre_del_schema+"""\'""").fetchone()
     esta_monitoreada = True
     if(check_schema is None):
         esta_monitoreada = False
+    #Consulta por rutas de imágenes y BIM asociados
     imagenes_estructura = ImagenEstructura.query.filter_by(id_estructura = id).all()
     bim_estructura = VisualizacionBIM.query.filter_by(id_estructura = id).first()
     context = {
@@ -157,11 +162,11 @@ def informacion_estructura(id):
     return render_template('tabla_estructura.html', **context)
 
 #PERMISOS = TODOS
+#Muestra el detalle de las zonas en una estructura
 @views_api.route('/zonas_estructura/<int:id>')
 @login_required
 def zonas_de_estructura(id):
     zonas = db.session.query(ZonaEstructura.id, ZonaEstructura.descripcion, ZonaEstructura.material, TipoZona.nombre_zona).filter(ZonaEstructura.tipo_zona == TipoZona.id, ZonaEstructura.id_estructura==id).all()
-    print(zonas, file=sys.stderr)
     context = {
         'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
         'zonas_puente' : zonas
@@ -169,12 +174,11 @@ def zonas_de_estructura(id):
     return render_template('zonas_puente.html',**context)
 
 #PERMISOS = TODOS
+#Obtiene el detalle de los sensores instalados actualmente
 @views_api.route('/sensores_estructura/<int:id>')
 @login_required
 def sensores_de_estructura(id):
-    #FALTA OBTENER DATOS DE DAQ
     sensores_actuales = db.session.query(Sensor.id, SensorInstalado.id.label("si"), Sensor.frecuencia, TipoSensor.nombre, ZonaEstructura.descripcion, InstalacionSensor.fecha_instalacion, SensorInstalado.es_activo).filter(TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_sensor == Sensor.id, SensorInstalado.id_instalacion == InstalacionSensor.id, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_estructura == id).distinct(Sensor.id).order_by(Sensor.id, InstalacionSensor.fecha_instalacion.desc()).all()
-    print(sensores_actuales, file=sys.stderr)
     context = {
         'id_puente' : id,
         'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
@@ -183,59 +187,78 @@ def sensores_de_estructura(id):
     return render_template('sensores_puente.html',**context)
 
 #PERMISOS = Administrador, dueño
+#Método que permite instalar un nuevo sensor en una estructura
 @views_api.route('/agregar_sensor/<int:id>', methods=["GET", "POST"])
 @login_required
 def agregar_sensor_en(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño'):
+        #En GET se carga el formulario que permite agregar nuevos sensores a la estructura
         if(request.method == "GET"):
             zonas_puente = db.session.query(ZonaEstructura.id, ZonaEstructura.descripcion).filter_by(id_estructura=id).all()
-            x = db.session.query(SensorInstalado.conexion_actual).filter(SensorInstalado.id_estructura == id, SensorInstalado.conexion_actual > 0)
-            conexiones = db.session.query(Canal.id.label('x')).except_(x).subquery()
-            disponibles = db.session.query(Canal).join(conexiones, conexiones.c.x == Canal.id).order_by(Canal.id_daq.asc(), Canal.numero_canal.asc()).all()
+            #Se filtran los sensores ya conectados
+            sensores_conectados = db.session.query(SensorInstalado.conexion_actual).filter(SensorInstalado.id_estructura == id, SensorInstalado.conexion_actual > 0)
+            conexiones = db.session.query(Canal.id.label('sensores_conectados')).except_(sensores_conectados).subquery()
+            #Se obtienen las conexiones disponibles de los DAQs
+            disponibles = db.session.query(Canal).join(conexiones, conexiones.c.sensores_conectados == Canal.id).order_by(Canal.id_daq.asc(), Canal.numero_canal.asc()).all()
             tipos_sensores = TipoSensor.query.all()
+            #Se guarda momentaneamente el id del puente en la sesión actual
             session['id_puente'] = id
             context = {
+                'id_puente' : id,
                 'nombre_y_tipo_activo' : obtener_nombre_y_activo(id),
                 'zonas_puente': zonas_puente,
                 'tipos_sensores': tipos_sensores,
                 'conexiones' : disponibles
             }
             return render_template('agregar_sensor.html',**context)
+        #En POST se envia lo ingresado via formulario, para guardar en la BD
         elif(request.method == "POST"):
             zona_sensor = request.form.get('zona_puente')
             tipo_sensor = request.form.get('tipo_sensor')
             daq_sensor = request.form.get('daqs_disponibles')
             freq_sensor = request.form.get('frecuencia')
+            #Se guarda el nuevo sensor instalado, y la fecha de la instalación en la BD
+            try:
+                nuevo_sensor = Sensor(tipo_sensor=tipo_sensor, frecuencia = freq_sensor)
+                nueva_instalacion_sensor = InstalacionSensor(fecha_instalacion=datetime.now())
+                db.session.add(nueva_instalacion_sensor)
+                db.session.add(nuevo_sensor)
+                db.session.flush()
+                nuevo_sensor_instalado = SensorInstalado(id_instalacion=nueva_instalacion_sensor.id, id_sensor=nuevo_sensor.id, id_zona=zona_sensor, id_estructura=session['id_puente'], conexion_actual=daq_sensor, es_activo=True)
+                db.session.add(nuevo_sensor_instalado)
+                db.session.flush()
             
-            nuevo_sensor = Sensor(tipo_sensor=tipo_sensor, frecuencia = freq_sensor)
-            nueva_instalacion_sensor = InstalacionSensor(fecha_instalacion=datetime.now())
-            db.session.add(nueva_instalacion_sensor)
-            db.session.add(nuevo_sensor)
-            db.session.flush()
-            
-            nuevo_sensor_instalado = SensorInstalado(id_instalacion=nueva_instalacion_sensor.id, id_sensor=nuevo_sensor.id, id_zona=zona_sensor, id_estructura=session['id_puente'], conexion_actual=daq_sensor, es_activo=True)
-            db.session.add(nuevo_sensor_instalado)
-            db.session.flush()
-            
-            nombre_tipo_sensor = db.session.query(TipoSensor.nombre).filter(TipoSensor.id==tipo_sensor).first().nombre
-            nombre_puente = Estructura.query.filter_by(id = session['id_puente']).first().nombre    
-            nombre_nueva_tabla = nombre_puente+'.'+nombre_tipo_sensor+'_'+str(session['id_puente'])+str(request.form.get('zona_puente'))+str(nuevo_sensor.id)+str(nuevo_sensor_instalado.id)
-            
-            db.session.commit()
-            x = nombre_nueva_tabla.lower().replace(" ","_")
-            crear_tabla_sensor(nuevo_sensor_instalado.id, x)
-            return redirect(url_for('views_api.sensores_de_estructura',id=session['id_puente']))
+                nombre_tipo_sensor = db.session.query(TipoSensor.nombre).filter(TipoSensor.id==tipo_sensor).first().nombre
+                nombre_puente = Estructura.query.filter_by(id = session['id_puente']).first().nombre    
+                nombre_nueva_tabla = nombre_puente+'.'+nombre_tipo_sensor+'_'+str(session['id_puente'])+str(request.form.get('zona_puente'))+str(nuevo_sensor.id)+str(nuevo_sensor_instalado.id)
+                db.session.commit()
+                x = nombre_nueva_tabla.lower().replace(" ","_")
+                crear_tabla_sensor(nuevo_sensor_instalado.id, x)
+            #En caso de ocurrir un fallo, se hace un rollback()
+            except:
+                db.session.rollback()
+                raise
+            #Finalmente, se redirige al listado de sensores disponibles
+            finally:
+                return redirect(url_for('views_api.sensores_de_estructura',id=session['id_puente']))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 
 #PERMISOS = Administrador, dueño y analista
-@views_api.route('/lecturas_sensor/<int:sensor>')
-def obtener_lecturas(sensor):
+#API que obtiene las lecturas de un sensor en el formato JSON
+@views_api.route('/lecturas_sensor/<int:sensor>/<int:periodo>')
+def obtener_lecturas_rango(sensor, periodo):
     try:
         nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
-        #lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
-        lecturas = db.session.execute("""SELECT time_bucket('10 seconds', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC""")
+        rango_de_tiempo = ""
+        if(periodo == 1):
+            rango_de_tiempo = "12 seconds"
+        elif(periodo == 2):
+            rango_de_tiempo = "288 seconds"
+        elif(periodo == 3):
+            rango_de_tiempo = "2016 seconds"
+        lecturas = db.session.execute("""SELECT time_bucket('"""+rango_de_tiempo+"""', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC LIMIT 300""")
         res = {}
         for i in lecturas:
             #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
@@ -248,7 +271,29 @@ def obtener_lecturas(sensor):
     except Exception as e:
         return render_template('usuario_no_autorizado.html')
 
+#PERMISOS = Administrador, dueño y analista
+#API que obtiene las lecturas de un sensor en el formato JSON
+@views_api.route('/lecturas_sensor/<int:sensor>')
+def obtener_lecturas(sensor):
+    try:
+        nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
+        lecturas = db.session.execute("""SELECT time_bucket('10 seconds', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC LIMIT 300""")
+        res = {}
+        for i in lecturas:
+            #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
+            res[i['sec'].strftime("%d-%d-%Y %H:%M:%S.%f")] = {
+                'max' : i['max'],
+                'min' : i['min'],
+                'avg' : i['avg']
+            }
+        return res
+    except Exception as e:
+        return render_template('usuario_no_autorizado.html')
+
+#PERMISOS = TODOS
+#Función que permite a la barra de búsqueda encontrar el listado de estructuras
 @views_api.route('/buscar_estructura', methods=['POST'])
+@login_required
 def buscar_estructura():
     try:
         x = request.form.get('autocomplete').split()[0]
@@ -256,8 +301,8 @@ def buscar_estructura():
     except Exception as e:
         return render_template('estructura_no_existe.html')
 
-
 #PERMISOS = Administrador, analista
+#Función que permite obtener el historial de estado de monitoreo de una estructura
 @views_api.route('/estados_monitoreo/<int:id>')
 @login_required
 def historial_monitoreo_estructura(id):
