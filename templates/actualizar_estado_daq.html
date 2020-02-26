@@ -6,7 +6,7 @@
         <div class="column is-4 is-offset-4">
             <h3 class="title">Actualizar estado de DAQ N° {{id_daq}} para {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
             <div class="box">
-                <form action="{{url_for('views_api.actualizar_estado_daq_post',id_daq=id_daq)}}" method="POST">
+                <form action="{{url_for('views_api.actualizar_estado_daq',id_daq=id_daq)}}" method="POST">
                     <!--Nuevo Estado-->
                     <div class="field">
                         <div class="control">

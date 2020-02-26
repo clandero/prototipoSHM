@@ -26,7 +26,8 @@
                         <th>Estado más reciente</th>
                         <th>Fecha</th>
                         <th>N° de canales</th> 
-                        <th>Características</th>                   
+                        <th>Características</th>
+                        <th></th>                      
                     </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,9 @@
                         <td>{{i.fecha_estado.strftime('%Y-%m-%d %H:%M:%S')}}</td>
                         <td>{{i.nro_canales}}</td>
                         <td>{{i.caracteristicas}}</td>
+                        <td>
+                            <a href="{{ url_for('views_api.informacion_daq', id_puente=id_puente, id_daq=i.id) }}" class="btn btn-secondary btn-sm">Detalles</a>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

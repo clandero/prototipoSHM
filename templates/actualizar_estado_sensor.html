@@ -6,7 +6,7 @@
         <div class="column is-4 is-offset-4">
             <h3 class="title">Actualizar estado de {{tipo_sensor}} N° {{id_sensor}} en {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h3>
             <div class="box">
-                <form action="{{url_for('views_api.actualizar_estado_sensor_post',id_sensor=id_sensor)}}" method="POST">
+                <form action="{{url_for('views_api.actualizar_estado_sensor',id_sensor=id_sensor)}}" method="POST">
                     <div class="field">
                         <div class="control">
                             <input class="form-control" type="text" name="nuevo_estado" placeholder="Nuevo estado">

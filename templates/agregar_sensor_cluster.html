@@ -6,7 +6,7 @@
         <div class="column is-4 is-offset-4">
             <h3 class="title">Añadir sensor en Cluster N° {{id_cluster}}</h3>
             <div class="box">
-                <form action="{{url_for('views_api.agregar_sensor_cluster_post', id_cluster=id_cluster)}}" method="POST">
+                <form action="{{url_for('views_api.agregar_sensor_cluster', id_cluster=id_cluster)}}" method="POST">
                     <!--Sensores disponibles-->
                     <div class="field">
                         <select class="custom-select" id="sensor" name="sensor">

@@ -17,17 +17,15 @@
                 Estado actual: {{ estado_actual.detalles }} - {{estado_actual.fecha_estado.strftime('%Y-%m-%d %H:%M:%S')}}
             </h4>
         </div>
-        <div class="row py-3">
-            <div class="col-md-1">
+        <div class="btn-toolbar py-3">
+
                 <form action="{{url_for('views_api.revisiones_daq',id_daq=info_daq.id)}}">
                     <button class="btn btn-secondary btn-sm">Revisiones</button>
                 </form>
-            </div>    
-            <div class="col-md-2">
                 <form action="{{url_for('views_api.historial_daq',id_daq=info_daq.id)}}">
                     <button class="btn btn-secondary btn-sm">Historial de estado</button>
                 </form>
-            </div>                 
+              
         </div>
         <div class="row py-3 table-responsive">
             <h2 class="subtitle">Canales: {{info_daq.nro_canales}}</h2>

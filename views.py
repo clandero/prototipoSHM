@@ -24,6 +24,17 @@ def obtener_nombre_y_activo(id_puente):
     }
     return res
 
+#Función que, dada una lista de canales, remueve aquellos que están ocupados, y entrega una lista de canales disponibles 
+def revisar_disponibilidad_canales(canales, ocupados):
+    res = []
+    for i in canales:
+        if i in (canales and ocupados):
+            res.append((i[0], i[1], i[2], True))
+        else:
+            res.append((i[0], i[1], i[2], False))
+    res.sort(key=lambda tup: tup[0])
+    return res
+
 #Función que, dado un sensor instalado y un nombre para la nueva tabla, genera la hypertable respectiva
 def crear_tabla_sensor(id_sensor_instalado, nombre_nueva_tabla):
     actualizar_nombre_sensor = SensorInstalado.query.filter_by(id=id_sensor_instalado).first()
@@ -76,7 +87,7 @@ def crear_monitoreo(id_puente):
         try:
             new_schema = db.engine.execute('CREATE SCHEMA IF NOT EXISTS '+nombre)
         except (Exception) as error:
-            print(error)
+            db.session.rollback()
         finally:
             #De no haber errores, redirige a la vista resumen del puente
             return redirect(url_for('views_api.informacion_estructura', id=id_puente))
@@ -246,8 +257,8 @@ def agregar_sensor_en(id):
 
 
 #PERMISOS = Administrador, dueño y analista
-#API que obtiene las lecturas de un sensor en el formato JSON
-@views_api.route('/lecturas_sensor/<int:sensor>/<int:periodo>')
+#API que obtiene las lecturas de un sensor en el formato JSON, con la opción de ventanas de tiempo (periodo: 1 = 1 hora, 2 = 1 dia, 3 = 1 semana)
+@views_api.route('/lecturas_sensor_rango/<int:sensor>/<int:periodo>')
 def obtener_lecturas_rango(sensor, periodo):
     try:
         nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
@@ -272,20 +283,15 @@ def obtener_lecturas_rango(sensor, periodo):
         return render_template('usuario_no_autorizado.html')
 
 #PERMISOS = Administrador, dueño y analista
-#API que obtiene las lecturas de un sensor en el formato JSON
+#API que obtiene las lecturas de un sensor en el formato JSON, entrega todo el contenido de la tabla
 @views_api.route('/lecturas_sensor/<int:sensor>')
 def obtener_lecturas(sensor):
     try:
         nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
-        lecturas = db.session.execute("""SELECT time_bucket('10 seconds', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC LIMIT 300""")
+        lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
         res = {}
         for i in lecturas:
-            #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
-            res[i['sec'].strftime("%d-%d-%Y %H:%M:%S.%f")] = {
-                'max' : i['max'],
-                'min' : i['min'],
-                'avg' : i['avg']
-            }
+            res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
         return res
     except Exception as e:
         return render_template('usuario_no_autorizado.html')
@@ -318,25 +324,33 @@ def historial_monitoreo_estructura(id):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Método que permite actualizar el estado de monitoreo de una estructura
 @views_api.route('/actualizar_estado/<int:id>', methods=["GET","POST"])
 @login_required
 def actualizar_estado_monitoreo(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        #Acceso con GET al formulario
         if(request.method == "GET"):
             context = {
                 'id_puente' : id,
                 'nombre_y_tipo_activo' : obtener_nombre_y_activo(id)
             }
             return render_template('actualizar_estado_monitoreo.html', **context)
+        #Acceso con POST para escribir en la BD
         elif(request.method == "POST"):
             x = EstadoMonitoreo(id_estructura=id, estado = request.form.get('nuevo_estado'), fecha_estado = datetime.now())
-            db.session.add(x)
-            db.session.commit()
-            return redirect(url_for('views_api.historial_monitoreo_estructura',id=id))
+            try:
+                db.session.add(x)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.historial_monitoreo_estructura',id=id))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite acceder al historial de calibraciones de un sensor instalado, dado su id
 @views_api.route('/calibraciones/<int:x>')
 @login_required
 def historial_calibraciones_sensor(x):
@@ -354,10 +368,12 @@ def historial_calibraciones_sensor(x):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite agregar una nueva calibración de un sensor a la BD
 @views_api.route('/nueva_calibracion/<int:x>', methods=["GET","POST"])
 @login_required
 def nueva_calibracion(x):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        #GET para acceder al formulario
         if(request.method == "GET"):
             sensor = Sensor.query.filter_by(id=x).first()
             tipo_sensor = TipoSensor.query.filter_by(id=sensor.tipo_sensor).first()
@@ -366,16 +382,22 @@ def nueva_calibracion(x):
                 'tipo_sensor' : tipo_sensor.nombre,
             }
             return render_template('nueva_calibracion.html',**context)
+        #POST para enviar los datos a la BD
         elif(request.method == "POST"):
             sensor_instalado_actual = db.session.query(SensorInstalado.id).filter(InstalacionSensor.id == SensorInstalado.id_instalacion, SensorInstalado.id_sensor == x).order_by(InstalacionSensor.fecha_instalacion.desc()).first()
             nueva_calibracion = CalibracionSensor(id_sensor_instalado=sensor_instalado_actual.id, fecha_calibracion=datetime.now(), detalles=request.form.get('nueva_calibracion'))
-            db.session.add(nueva_calibracion)
-            db.session.commit()
-            return redirect(url_for('views_api.historial_calibraciones_sensor',x=x))
+            try:
+                db.session.add(nueva_calibracion)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.historial_calibraciones_sensor',x=x))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Listado de DAQs de una estructura
 @views_api.route('/daqs_estructura/<int:id_puente>')
 @login_required
 def daqs_de_estructura(id_puente):
@@ -391,6 +413,7 @@ def daqs_de_estructura(id_puente):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Listado de DAQs por zona de la estructura
 @views_api.route('/daqs_zona/<int:id_zona>')
 @login_required
 def daqs_de_zona(id_zona):
@@ -411,17 +434,8 @@ def daqs_de_zona(id_zona):
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
-def revisar_disponibilidad_canales(canales, ocupados):
-    res = []
-    for i in canales:
-        if i in (canales and ocupados):
-            res.append((i[0], i[1], i[2], True))
-        else:
-            res.append((i[0], i[1], i[2], False))
-    res.sort(key=lambda tup: tup[0])
-    return res
-
 #PERMISOS = Administrador, analista
+#Entrega del detalle de un DAQ en una estructura
 @views_api.route('/daq/<int:id_puente>/<int:id_daq>')
 @login_required
 def informacion_daq(id_puente, id_daq):
@@ -432,7 +446,6 @@ def informacion_daq(id_puente, id_daq):
         canales_del_daq = db.session.query(Canal.id, Canal.id_daq, Canal.numero_canal).filter(Canal.id_daq == id_daq).all()
         canales_ocupados = db.session.query(SensorInstalado.conexion_actual, Canal.id_daq, Canal.numero_canal).filter(Canal.id == SensorInstalado.conexion_actual, Canal.id_daq == id_daq, SensorInstalado.conexion_actual > 0)
         x = revisar_disponibilidad_canales(canales_del_daq, canales_ocupados)
-        print(x)
         session['id_puente'] = id_puente   
         context = {
             'nombre_y_tipo_activo' : obtener_nombre_y_activo(id_puente),
@@ -446,6 +459,7 @@ def informacion_daq(id_puente, id_daq):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Entrega el historial de estados de un DAQ
 @views_api.route('/historial_daq/<int:id_daq>')
 @login_required
 def historial_daq(id_daq):
@@ -461,25 +475,33 @@ def historial_daq(id_daq):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Método que permite actualizar el estado de un DAQ en la BD
 @views_api.route('/actualizar_estado_daq/<int:id_daq>', methods=["GET","POST"])
 @login_required
 def actualizar_estado_daq(id_daq):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        #GET para obtener el formualrio
         if(request.method == "GET"):
             context = {
                 'id_daq' : id_daq,
                 'nombre_y_tipo_activo' : obtener_nombre_y_activo(session['id_puente'])
             }
             return render_template('actualizar_estado_daq.html',**context)
+        #POST para enviar los datos a la BD
         elif(request.method == "POST"):
             nuevo_estado = EstadoDAQ(id_daq=id_daq, fecha_estado=datetime.now(), detalles=request.form.get('nuevo_estado'))
-            db.session.add(nuevo_estado)
-            db.session.commit()
-            return redirect(url_for('views_api.historial_daq',id_daq = id_daq))
+            try:
+                db.session.add(nuevo_estado)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.historial_daq',id_daq = id_daq))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite ver las revisiones de un DAQ, registradas en la BD
 @views_api.route('/revisiones_daq/<int:id_daq>')
 @login_required
 def revisiones_daq(id_daq):
@@ -495,6 +517,7 @@ def revisiones_daq(id_daq):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite añadir una nueva revisión de un DAQ
 @views_api.route('/nueva_revision_daq/<int:id_daq>', methods=["GET","POST"])
 @login_required
 def actualizar_revision_daq(id_daq):
@@ -507,13 +530,18 @@ def actualizar_revision_daq(id_daq):
             return render_template('nueva_revision_daq.html',**context)
         elif(request.method == "POST"):
             nueva_revision = RevisionDAQ(id_daq=id_daq, fecha_revision=datetime.now(), detalles=request.form.get('nueva_revision'))
-            db.session.add(nueva_revision)
-            db.session.commit()
-            return redirect(url_for('views_api.revisiones_daq',id_daq = id_daq))
+            try:
+                db.session.add(nueva_revision)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.revisiones_daq',id_daq = id_daq))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Método que muestra los "clusters" de sensores próximos entre si, en una estructura
 @views_api.route('/clusters/<int:id_puente>')
 @login_required
 def clusters_estructura(id_puente):
@@ -529,13 +557,13 @@ def clusters_estructura(id_puente):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Muestra el listado de sensores pertenecientes a un "cluster"
 @views_api.route('/sensores_cluster/<int:id_cluster>')
 @login_required
 def sensores_cluster(id_cluster):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
         nombre_cluster = db.session.query(Conjunto.nombre).filter_by(id = id_cluster).first().nombre
         sensores_cluster = db.session.query(Sensor.id, SensorInstalado.id.label("si"), ZonaEstructura.descripcion, Sensor.frecuencia, TipoSensor.nombre, SensorInstalado.es_activo).filter(SensorInstalado.id == ConjuntoSensorInstalado.id_sensor_instalado, Sensor.id == SensorInstalado.id_sensor, ZonaEstructura.id == SensorInstalado.id_zona, TipoSensor.id == Sensor.tipo_sensor, ConjuntoSensorInstalado.id_conjunto == id_cluster).all()
-        print(sensores_cluster)
         context = {
             'id_cluster' : id_cluster,
             'nombre_cluster' : nombre_cluster,
@@ -546,6 +574,7 @@ def sensores_cluster(id_cluster):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite agregar un sensor a un cluster (a modo de ejemplo, en la realidad, esto no debiese ser una interacción del usuario)
 @views_api.route('/nuevo_sensor_cluster/<int:id_cluster>')
 @login_required
 def agregar_sensor_cluster(id_cluster):
@@ -562,17 +591,22 @@ def agregar_sensor_cluster(id_cluster):
             id_sensor = request.form.get('sensor')
             zona = db.session.query(SensorInstalado.id_estructura, SensorInstalado.id_zona).filter(SensorInstalado.id == id_sensor).first()
             nuevo_sensor_cluster = ConjuntoSensorInstalado(id_sensor_instalado = id_sensor, id_conjunto = id_cluster)
-            db.session.add(nuevo_sensor_cluster)
-            check_if_exists = ConjuntoZona.query.filter(ConjuntoZona.id_conjunto == id_cluster, ConjuntoZona.id_zona == zona.id_zona, ConjuntoZona.id_estructura == zona.id_estructura).first()
-            if(check_if_exists is None):
-                nueva_zona_cluster = ConjuntoZona(id_conjunto = id_cluster, id_zona = zona.id_zona, id_estructura = zona.id_estructura)
-                db.session.add(nueva_zona_cluster)
-            db.session.commit()
-            return redirect(url_for('views_api.sensores_cluster', id_cluster = id_cluster))
+            try:
+                db.session.add(nuevo_sensor_cluster)
+                check_if_exists = ConjuntoZona.query.filter(ConjuntoZona.id_conjunto == id_cluster, ConjuntoZona.id_zona == zona.id_zona, ConjuntoZona.id_estructura == zona.id_estructura).first()
+                if(check_if_exists is None):
+                    nueva_zona_cluster = ConjuntoZona(id_conjunto = id_cluster, id_zona = zona.id_zona, id_estructura = zona.id_estructura)
+                    db.session.add(nueva_zona_cluster)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.sensores_cluster', id_cluster = id_cluster))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Entrega el listado de sensores que pertenecen a una zona de la estructura
 @views_api.route('/sensores_zona/<int:id_zona>')
 @login_required
 def sensores_por_zona(id_zona):
@@ -593,6 +627,7 @@ def sensores_por_zona(id_zona):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Método que retorna el historial de estado de un sensor instalado
 @views_api.route('/historial_sensor/<int:id_sensor>')
 @login_required
 def historial_estado_sensor(id_sensor):
@@ -611,6 +646,7 @@ def historial_estado_sensor(id_sensor):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Método que permite al usuario (autorizado) actualizar el estado de un sensor (a modo de ejemplo)
 @views_api.route('/actualizar_estado_sensor/<int:id_sensor>')
 @login_required
 def actualizar_estado_sensor(id_sensor):
@@ -627,38 +663,50 @@ def actualizar_estado_sensor(id_sensor):
         elif(request.method == "POST"):
             id_sensor_instalado_actual = db.session.query(SensorInstalado.id, InstalacionSensor.fecha_instalacion).filter(InstalacionSensor.id == SensorInstalado.id_instalacion, SensorInstalado.id_sensor == id_sensor).order_by(InstalacionSensor.fecha_instalacion.desc()).first().id
             x = EstadoSensor(id_sensor_instalado=id_sensor_instalado_actual, detalles = request.form.get('nuevo_estado'), fecha_estado = datetime.now())
-            db.session.add(x)
-            db.session.commit()
-            return redirect(url_for('views_api.historial_estado_sensor',id_sensor=id_sensor))
+            try:
+                db.session.add(x)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.historial_estado_sensor',id_sensor=id_sensor))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Vista que permite al usuario en la sesión actual, crear un grupo personalizado de sensores
 @views_api.route('/grupo_definido_usuario', methods=['GET','POST'])
 @login_required
 def grupo_definido_usuario():
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
+        #GET para ver el formulario
         if(request.method == 'GET'):
             sensores = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
             context = {
                 'sensores' : sensores
             }
             return render_template('grupo_definido_usuario.html',**context)
+        #POST para enviar el grupo a la BD
         elif(request.method == 'POST'):
             nombre = request.form.get('nombre_grupo')
             sensores = request.form.getlist('sensores_elegidos')
             nuevo_grupo = GrupoDefinidoUsuario(nombre=nombre, id_usuario=current_user.id, fecha_creacion=datetime.now())
-            db.session.add(nuevo_grupo)
-            db.session.flush()
-            for i in sensores:
-                x = SensorPorGrupoDefinido(id_sensor_instalado=i, id_grupo=nuevo_grupo.id, fecha_creacion=datetime.now())
-                db.session.add(x)
-            db.session.commit()
-            return redirect(url_for('views_api.grupos_usuario'))
+            try:
+                db.session.add(nuevo_grupo)
+                db.session.flush()
+                for i in sensores:
+                    x = SensorPorGrupoDefinido(id_sensor_instalado=i, id_grupo=nuevo_grupo.id, fecha_creacion=datetime.now())
+                    db.session.add(x)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.grupos_usuario'))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Vista con el listado de grupos de sensores creados por el usuario actual
 @views_api.route('/grupos_usuario')
 @login_required
 def grupos_usuario():
@@ -672,12 +720,12 @@ def grupos_usuario():
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite acceder al listado de sensores incluidos en un grupo personalizado
 @views_api.route('/sensores_de_grupo/<int:id>')
 @login_required
 def sensores_de_grupo(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
         sensores = db.session.query(TipoSensor.nombre.label('tipo_sensor'), ZonaEstructura.descripcion, Estructura.tipo_activo, Estructura.nombre, SensorInstalado.id, SensorInstalado.id_sensor, SensorInstalado.nombre_tabla, SensorPorGrupoDefinido.fecha_creacion).filter(GrupoDefinidoUsuario.id == SensorPorGrupoDefinido.id_grupo, SensorInstalado.id == SensorPorGrupoDefinido.id_sensor_instalado, Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, ZonaEstructura.id == SensorInstalado.id_zona, Estructura.id == SensorInstalado.id_estructura, GrupoDefinidoUsuario.id == id).all()
-        print(sensores)
         nombre_grupo = db.session.query(GrupoDefinidoUsuario.nombre).filter(GrupoDefinidoUsuario.id == id).first().nombre
         context = {
             'nombre_grupo':nombre_grupo,
@@ -688,18 +736,24 @@ def sensores_de_grupo(id):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Al acceder a este método, el usuario elimina un grupo de sensores (borra la relacion "Grupo Definido por usuario", los sensores siguen donde estaban)
 @views_api.route('/eliminar_grupo/<int:id>', methods=['POST'])
 @login_required
 def eliminar_grupo(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista'):
         sensores_a_eliminar = SensorPorGrupoDefinido.query.filter_by(id_grupo = id).delete()
-        grupo_a_eliminar = GrupoDefinidoUsuario.query.filter_by(id = id).delete()
-        db.session.commit()
-        return redirect(url_for('views_api.grupos_usuario'))
+        try:
+            grupo_a_eliminar = GrupoDefinidoUsuario.query.filter_by(id = id).delete()
+            db.session.commit()
+        except:
+            db.session.rollback()
+        finally:
+            return redirect(url_for('views_api.grupos_usuario'))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista
+#Permite al usuario editar el grupo que él creo (ya sea el nombre del grupo, o los sensores que forman parte de este)
 @views_api.route('/editar_grupo/<int:id>', methods=['GET','POST'])
 @login_required
 def editar_grupo(id):
@@ -708,7 +762,6 @@ def editar_grupo(id):
             sensores_del_grupo = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id == SensorPorGrupoDefinido.id_sensor_instalado, SensorPorGrupoDefinido.id_grupo == GrupoDefinidoUsuario.id, GrupoDefinidoUsuario.id == id).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
             sensores_disponibles = sensores = db.session.query(SensorInstalado.id, SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion, TipoSensor.nombre.label('tipo_sensor'), Estructura.nombre, Estructura.tipo_activo, ZonaEstructura.descripcion, SensorInstalado.es_activo, SensorInstalado.nombre_tabla, SensorInstalado.conexion_actual).filter(Sensor.id == SensorInstalado.id_sensor, TipoSensor.id == Sensor.tipo_sensor, InstalacionSensor.id == SensorInstalado.id_instalacion, Estructura.id == SensorInstalado.id_estructura, ZonaEstructura.id == SensorInstalado.id_zona).distinct(SensorInstalado.id_sensor).order_by(SensorInstalado.id_sensor, InstalacionSensor.fecha_instalacion.desc()).all()
             nombre_grupo = db.session.query(GrupoDefinidoUsuario.nombre).filter_by(id = id).first().nombre
-            print(nombre_grupo)
             context = {
                 'id_grupo' : id,
                 'nombre_grupo' : nombre_grupo, 
@@ -721,28 +774,30 @@ def editar_grupo(id):
             inicial_lista = [(i.id_sensor_instalado, i.id_grupo) for i in inicial_query] 
             final_query = request.form.getlist('sensores_elegidos')
             final_lista = [(int(i), id) for i in final_query]
-            #remover elementos
-            for i in inicial_lista:
-                if i not in final_lista:
-                    #print(str(i)+' removido')
-                    x = SensorPorGrupoDefinido.query.filter_by(id_sensor_instalado = i[0], id_grupo=i[1]).delete()
-            #añadir elementos
-            for i in final_lista:
-                if i not in inicial_lista:
-                    #print(str(i)+' añadido')
-                    y = SensorPorGrupoDefinido(id_sensor_instalado = i[0], id_grupo = i[1], fecha_creacion = datetime.now())
-                    db.session.add(y)
-            db.session.commit()
-            return redirect(url_for('views_api.grupos_usuario'))
+            try:
+                #Para remover elementos
+                for i in inicial_lista:
+                    if i not in final_lista:
+                        x = SensorPorGrupoDefinido.query.filter_by(id_sensor_instalado = i[0], id_grupo=i[1]).delete()
+                #Para añadir elementos
+                for i in final_lista:
+                    if i not in inicial_lista:
+                        y = SensorPorGrupoDefinido(id_sensor_instalado = i[0], id_grupo = i[1], fecha_creacion = datetime.now())
+                        db.session.add(y)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.grupos_usuario'))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+#Listado de informes de monitoreo visual asociados a una estructura
 @views_api.route('/informes_estructura/<int:id_puente>')
 @login_required
 def informes_monitoreo_estructura(id_puente):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
-        print(os.getcwd(), file=sys.stderr)
         informes = db.session.query(InformeMonitoreoVisual.ruta_acceso_archivo, InformeMonitoreoVisual.id_informe, Usuario.nombre, Usuario.apellido, InformeMonitoreoVisual.contenido, InformeMonitoreoVisual.fecha).filter(InformeMonitoreoVisual.id_usuario == Usuario.id, InformeMonitoreoVisual.id_estructura == id_puente).all()
         context = {
             'id_puente' : id_puente,
@@ -754,12 +809,12 @@ def informes_monitoreo_estructura(id_puente):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+#Ruta para acceder a un informe en particular (abre el visor de pdf en el navegador)
 @views_api.route('/informe/<int:id>')
 @login_required
 def ver_informe(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
         informe = InformeMonitoreoVisual.query.filter_by(id_informe = id).first()
-        print(informe.ruta_acceso_archivo)
         context = {
             'informe' : informe
         }
@@ -769,57 +824,50 @@ def ver_informe(id):
 
 
 #PERMISOS = Administrador, analista, Dueño
+#Para eliminar un informe de monitoreo ("Debe hacerlo el mismo usuario que creo el informe")
 @views_api.route('/eliminar_informe/<int:id>', methods=['POST'])
 @login_required
 def eliminar_informe(id):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
         informe = InformeMonitoreoVisual.query.filter_by(id_informe = id).first()
-        os.chdir('static/reports')
-        os.remove(informe.ruta_acceso_archivo)
-        os.chdir('../..')
-        informe_a_borrar = InformeMonitoreoVisual.query.filter_by(id_informe = id).delete()
-        db.session.commit()
-        return redirect(url_for('views_api.informes_monitoreo_estructura',id_puente=informe.id_estructura))
+        try:
+            if(informe.id_usuario == current_user.id):
+                os.chdir('static/reports')
+                os.remove(informe.ruta_acceso_archivo)
+                os.chdir('../..')
+                informe_a_borrar = InformeMonitoreoVisual.query.filter_by(id_informe = id).delete()
+                db.session.commit()
+        except:
+            db.session.rollback()
+        finally:
+            return redirect(url_for('views_api.informes_monitoreo_estructura',id_puente=informe.id_estructura))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 
 #PERMISOS = Administrador, analista, Dueño
+#Permite agregar un nuevo informe de monitoreo visual, asociado a una estructura
 @views_api.route('/agregar_informe/<int:id_puente>', methods=['POST'])
 @login_required
 def agregar_informe(id_puente):
     if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
-        print(os.getcwd())
         file = request.files['input-file-now']
-        os.chdir('static/reports')
-        file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
-        os.chdir('../..')
-        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
-        db.session.add(nuevo_informe)
-        db.session.commit()
-        return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
+        try:
+            os.chdir('static/reports')
+            file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
+            os.chdir('../..')
+            nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
+            db.session.add(nuevo_informe)
+            db.session.commit()
+        except:
+            db.session.rollback()
+        finally:
+            return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
-@views_api.route('/agregar_informe', methods=['POST'])
-@login_required
-def agregar_informe_test():
-    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
-        print(os.getcwd())
-        id_puente = request.form.get('id_puente')
-        file = request.files['input-file-now']
-        os.chdir('static/reports')
-        file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
-        os.chdir('../..')
-        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
-        db.session.add(nuevo_informe)
-        db.session.commit()
-        return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
-    else:
-        return redirect(url_for('views_api.usuario_no_autorizado'))
-
-#PERMISOS = Administrador, analista, Dueño
+#Listado con los informes subidos por el usuario en sesión actual
 @views_api.route('/mis_informes')
 @login_required
 def informes_monitoreo_usuario():
@@ -833,6 +881,7 @@ def informes_monitoreo_usuario():
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+#Listado con los informes de monitoreo visual asociados a una zona del puente
 @views_api.route('/informes_zona/<int:id_zona>')
 @login_required
 def informes_monitoreo_zona(id_zona):
@@ -852,6 +901,7 @@ def informes_monitoreo_zona(id_zona):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+#Listado de hallazgos asociados a un informe de monitoreo visual
 @views_api.route('/hallazgos_informe/<int:id_informe>')
 @login_required
 def hallazgos_de_informe(id_informe):
@@ -874,6 +924,7 @@ def hallazgos_de_informe(id_informe):
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #PERMISOS = Administrador, analista, Dueño
+#Este método permite agregar nuevos hallazgos a un informe ya existente
 @views_api.route('/agregar_hallazgo/<int:id_informe>', methods=['GET','POST'])
 @login_required
 def agregar_hallazgo(id_informe):
@@ -890,24 +941,29 @@ def agregar_hallazgo(id_informe):
         elif(request.method == 'POST'):
             id_estructura = InformeMonitoreoVisual.query.filter_by(id_informe = id_informe).first().id_estructura
             nuevo_hallazgo = HallazgoVisual(id_usuario=current_user.id, detalle_hallazgo=request.form.get('detalle'), fecha=datetime.now(), id_zona = request.form.get('zona_puente'), id_estructura=id_estructura)
-            db.session.add(nuevo_hallazgo)
-            db.session.flush()
-            imagenes = request.files.getlist('imagenes')
-            list_img = []
-            os.chdir('static/images')
-            for i in imagenes:
-                print(i)
-                i.save(secure_filename(unidecode.unidecode(i.filename.replace(" ","_"))))
-                list_img.append(MaterialAudiovisual(id_hallazgo=nuevo_hallazgo.id, tipo_material='imagen',ruta_acceso_archivo=unidecode.unidecode(i.filename.replace(" ","_"))))
-            os.chdir('../..')
-            db.session.bulk_save_objects(list_img)
-            asociar_a_informe = HallazgoInforme(id_informe=id_informe, id_hallazgo=nuevo_hallazgo.id)
-            db.session.add(asociar_a_informe)
-            db.session.commit()
-            return redirect(url_for('views_api.hallazgos_de_informe',id_informe=id_informe))
+            try:
+                db.session.add(nuevo_hallazgo)
+                db.session.flush()
+                imagenes = request.files.getlist('imagenes')
+                list_img = []
+                os.chdir('static/images')
+                for i in imagenes:
+                    i.save(secure_filename(unidecode.unidecode(i.filename.replace(" ","_"))))
+                    list_img.append(MaterialAudiovisual(id_hallazgo=nuevo_hallazgo.id, tipo_material='imagen',ruta_acceso_archivo=unidecode.unidecode(i.filename.replace(" ","_"))))
+                os.chdir('../..')
+                db.session.bulk_save_objects(list_img)
+                asociar_a_informe = HallazgoInforme(id_informe=id_informe, id_hallazgo=nuevo_hallazgo.id)
+                db.session.add(asociar_a_informe)
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.hallazgos_de_informe',id_informe=id_informe))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
+
+#Rutas que permiten acceder a recursos estáticos de la plataforma (Archivos BIM, Imágenes e Informes)
 @views_api.route('/static/bim/<string:filename>')
 def show_3d_bim(filename):
     return send_file('./static/bim/'+filename)
@@ -921,6 +977,7 @@ def show_report(filename):
     return send_file('./static/reports/'+filename)
 
 #PERMISOS = Administrador, analista
+#Método que permite agregar nuevos DAQs a una estructura
 @views_api.route('/agregar_daq/<int:id_puente>', methods = ['GET','POST'])
 @login_required
 def agregar_daq(id_puente):
@@ -935,33 +992,37 @@ def agregar_daq(id_puente):
             return render_template('agregar_daq.html',**context)
         elif(request.method == 'POST'):
             nuevo_daq = DAQ(nro_canales=request.form.get('nro_canales'))
-            db.session.add(nuevo_daq)
-            db.session.flush()
-            zona_daq = DAQPorZona(id_daq=nuevo_daq.id, id_zona=request.form.get('zona_puente'), id_estructura=id_puente)
-            db.session.add(zona_daq)
-            caract = DescripcionDAQ(id_daq=nuevo_daq.id, caracteristicas=request.form.get('caracteristicas'))
-            db.session.add(caract)
-            estado_nuevo_daq = EstadoDAQ(id_daq=nuevo_daq.id, fecha_estado=datetime.now(), detalles='Conectado')
-            db.session.add(estado_nuevo_daq)
-            canales = []
-            for i in range(1,int(nuevo_daq.nro_canales)+1):
-                x = Canal(id_daq=nuevo_daq.id, numero_canal=i)
-                canales.append(x)
-            db.session.bulk_save_objects(canales)                
-            db.session.commit()
-            return redirect(url_for('views_api.daqs_de_estructura',id_puente = id_puente))
+            try:
+                db.session.add(nuevo_daq)
+                db.session.flush()
+                zona_daq = DAQPorZona(id_daq=nuevo_daq.id, id_zona=request.form.get('zona_puente'), id_estructura=id_puente)
+                db.session.add(zona_daq)
+                caract = DescripcionDAQ(id_daq=nuevo_daq.id, caracteristicas=request.form.get('caracteristicas'))
+                db.session.add(caract)
+                estado_nuevo_daq = EstadoDAQ(id_daq=nuevo_daq.id, fecha_estado=datetime.now(), detalles='Conectado')
+                db.session.add(estado_nuevo_daq)
+                canales = []
+                for i in range(1,int(nuevo_daq.nro_canales)+1):
+                    x = Canal(id_daq=nuevo_daq.id, numero_canal=i)
+                    canales.append(x)
+                db.session.bulk_save_objects(canales)                
+                db.session.commit()
+            except:
+                db.session.rollback()
+            finally:
+                return redirect(url_for('views_api.daqs_de_estructura',id_puente = id_puente))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
 
 
 #PERMISOS = Administrador
+#Versión beta del método "sensores_de_estructura", pero con la diferencia de que se filtra por fecha, permitiendo ver los sensores instalados en otros instantes de tiempo
 @views_api.route('/sensores_estructura_test/<int:id>',methods=["GET","POST"])
 @login_required
 def sensores_de_estructura_test(id):
     if(current_user.permisos == "Administrador"):
         if(request.method == "GET"):
             sensores_actuales = db.session.query(Sensor.id, SensorInstalado.id.label("si"), Sensor.frecuencia, TipoSensor.nombre, ZonaEstructura.descripcion, InstalacionSensor.fecha_instalacion, SensorInstalado.es_activo).filter(TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_sensor == Sensor.id, SensorInstalado.id_instalacion == InstalacionSensor.id, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_estructura == id).distinct(Sensor.id).order_by(Sensor.id, InstalacionSensor.fecha_instalacion.desc()).all()
-            print(sensores_actuales, file=sys.stderr)
             context = {
                 'id_puente' : id,
                 'fecha_actual' : datetime.now().strftime('%Y-%m-%d'),
@@ -973,7 +1034,6 @@ def sensores_de_estructura_test(id):
             fecha = request.form.get('date')
             x = db.session.query(Sensor.id, SensorInstalado.id.label("si"), Sensor.frecuencia, TipoSensor.nombre, ZonaEstructura.descripcion, InstalacionSensor.fecha_instalacion, SensorInstalado.es_activo).filter(TipoSensor.id == Sensor.tipo_sensor, SensorInstalado.id_sensor == Sensor.id, SensorInstalado.id_instalacion == InstalacionSensor.id, ZonaEstructura.id == SensorInstalado.id_zona, SensorInstalado.id_estructura == id, InstalacionSensor.fecha_instalacion <= fecha).distinct(Sensor.id).order_by(Sensor.id, InstalacionSensor.fecha_instalacion.desc()).subquery()
             sensores = db.session.query(x).filter(x.c.es_activo == True)
-            print(sensores, file=sys.stderr)
             context = {
                 'id_puente' : id,
                 'fecha_actual' : request.form.get('date'),
@@ -983,6 +1043,3 @@ def sensores_de_estructura_test(id):
             return render_template('sensores_puente_test.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
-    
-    
-    
