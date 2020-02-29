@@ -14,3 +14,7 @@
     margin-right: auto; 
     width: 50%;
 }
+
+.modal{
+    z-index:1100;
+}

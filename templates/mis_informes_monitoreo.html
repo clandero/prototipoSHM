@@ -3,6 +3,14 @@
 {% block customcss %}
     {{ super() }}
     <link href="{{ url_for('static', filename='css/tabla_estructura.css') }}" rel="stylesheet">
+    <style>
+        .modal{
+            z-index:1100;
+        }
+        .modal-content{
+            margin: 0 auto;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -23,7 +31,7 @@
                                 </div>
                             <div class="modal-body">
                                 <form action="{{url_for('views_api.agregar_informe_test')}}" method="POST" enctype = "multipart/form-data">
-                                    <input class="input" type="text" name="id_puente" placeholder="ID de la estructura">
+                                    <input class="input" type="text" name="id_puente" placeholder="ID de la estructura" style="margin-bottom:5px;">
                                     <input class="input" type="text" name="contenido" placeholder="Descripción">
                                     <br><br>
                                     <div class="file-upload-wrapper">
@@ -81,4 +89,6 @@
         </div>
     </div>
 </div>
+<script src="{{ url_for('static', filename='js/jquery-3.4.1.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
 {% endblock %}

@@ -1043,3 +1043,21 @@ def sensores_de_estructura_test(id):
             return render_template('sensores_puente_test.html',**context)
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+#PERMISOS = Administrador, analista, Dueño
+@views_api.route('/agregar_informe', methods=['POST'])
+@login_required
+def agregar_informe_test():
+    if(current_user.permisos == 'Administrador' or current_user.permisos == 'Analista' or current_user.permisos == 'Dueño'):
+        print(os.getcwd())
+        id_puente = request.form.get('id_puente')
+        file = request.files['input-file-now']
+        os.chdir('static/reports')
+        file.save(secure_filename(unidecode.unidecode(file.filename.replace(" ","_"))))
+        os.chdir('../..')
+        nuevo_informe = InformeMonitoreoVisual(id_usuario=current_user.id, id_estructura=id_puente, contenido=request.form.get('contenido'), fecha=datetime.now(), ruta_acceso_archivo=unidecode.unidecode(file.filename.replace(" ","_")))
+        db.session.add(nuevo_informe)
+        db.session.commit()
+        return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
+    else:
+        return redirect(url_for('views_api.usuario_no_autorizado'))

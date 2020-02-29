@@ -2,7 +2,7 @@
 
 {% block customcss %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='css/profile.css') }}" rel="stylesheet">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -10,7 +10,7 @@
 		<div class="container py-5">
 			<form method="POST" action="{{url_for('views_api.buscar_estructura')}}" autocomplete="off">
 				<div class="row no-gutters">
-					<div class="col-10">
+					<div class="col-9 col-md-10">
 						<input id="autocomplete" type="text" name="autocomplete" placeholder="Buscar estructura por nombre" required list="estructuras"/>
 						<datalist id="estructuras">
 							{% for i in puentes %}
@@ -18,8 +18,10 @@
 							{% endfor %}    
 						</datalist>
 					</div>
-					<div class="col-2">
-						<button id="searchBtn"  onclick="getValue()" type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+					<div class="col-3 col-md-2">
+						<button id="searchBtn" onclick="getValue()" type="submit" class="btn btn-primary btn-sm">
+							Buscar
+						</button>
 					</div>
 				</div>
 			</form>

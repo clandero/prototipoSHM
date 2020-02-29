@@ -9,18 +9,14 @@
 <div class="bg">
     <div class="container px-5 py-5">
         <h1 class="title py-3">Sensores de {{nombre_y_tipo_activo.tipo_activo}} {{nombre_y_tipo_activo.nombre_puente}}</h1>
-        <div class="row">
+        <div class="btn-toolbar py-3">
             {% if current_user.permisos == 'Administrador' or current_user.permisos == 'Dueño' %}
-                <div class="col-md-2">
-                    <form action="{{url_for('views_api.agregar_sensor_en', id=id_puente)}}">
-                        <button class="btn btn-secondary btn-sm">Añadir nuevo sensor</button>
-                    </form>
-                </div>
-                <div class="col-md-2">
-                    <form action="{{url_for('views_api.grupo_definido_usuario')}}">
-                        <button class="btn btn-secondary btn-sm">Definir grupo de sensores</button>
-                    </form>
-                </div>
+                <form action="{{url_for('views_api.agregar_sensor_en', id=id_puente)}}">
+                    <button class="btn btn-secondary btn-sm">Añadir sensor</button>
+                </form>
+                <form action="{{url_for('views_api.grupo_definido_usuario')}}">
+                    <button class="btn btn-secondary btn-sm">Crear grupo</button>
+                </form>
             {% endif %} 
         </div>
         <div class="row py-3 table-responsive">
