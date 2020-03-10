@@ -269,7 +269,7 @@ def obtener_lecturas_rango(sensor, periodo):
             rango_de_tiempo = "288 seconds"
         elif(periodo == 3):
             rango_de_tiempo = "2016 seconds"
-        lecturas = db.session.execute("""SELECT time_bucket('"""+rango_de_tiempo+"""', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x GROUP BY sec ORDER BY sec DESC LIMIT 300""")
+        lecturas = db.session.execute("""SELECT time_bucket('"""+rango_de_tiempo+"""', x.fecha) as sec, max(lectura),min(lectura),avg(lectura) FROM """+nombre_tabla+""" as x WHERE x.fecha <= '2008-01-02' GROUP BY sec ORDER BY sec DESC LIMIT 300""")
         res = {}
         for i in lecturas:
             #res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
@@ -288,7 +288,7 @@ def obtener_lecturas_rango(sensor, periodo):
 def obtener_lecturas(sensor):
     try:
         nombre_tabla = SensorInstalado.query.filter_by(id=sensor).first().nombre_tabla
-        lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla)
+        lecturas = db.session.execute("""SELECT * FROM """+nombre_tabla+""" LIMIT 300""")
         res = {}
         for i in lecturas:
             res[i['fecha'].strftime("%d-%d-%Y %H:%M:%S.%f")] = i['lectura']
