@@ -1061,3 +1061,30 @@ def agregar_informe_test():
         return redirect(url_for('views_api.informes_monitoreo_estructura', id_puente=id_puente))
     else:
         return redirect(url_for('views_api.usuario_no_autorizado'))
+
+
+@views_api.route('/hallazgos/<int:id_puente>')
+def obtener_hallazgos(id_puente):
+    hallazgos = HallazgoVisual.query.filter_by(id_estructura=id_puente).all()
+    res = {}
+    for i in hallazgos:
+        imagenes = MaterialAudiovisual.query.filter_by(id_hallazgo=i.id).all()
+        print(imagenes)
+        res_img = {}
+        for j in imagenes:
+            res_img[j.id] = {
+                'tipo_material' : j.tipo_material,
+                'ruta_acceso_archivo' : 'http://shm.inf.udec.cl/static/images/'+j.ruta_acceso_archivo
+            }
+        res[i.id] = {
+            'id_usuario'        : i.id_usuario,
+            'detalle_hallazgo'  : i.detalle_hallazgo,
+            'fecha'             : i.fecha,
+            'coord_x'           : i.coord_x,
+            'coord_y'           : i.coord_y,
+            'coord_z'           : i.coord_z,
+            'id_zona'           : i.id_zona,
+            'id_estructura'     : i.id_estructura,
+            'imagenes'          : res_img
+        }
+    return res
