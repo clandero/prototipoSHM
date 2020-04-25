@@ -1072,11 +1072,13 @@ def obtener_hallazgos(id_puente):
         print(imagenes)
         res_img = {}
         for j in imagenes:
-            res_img[j.id] = {
+            res_img['material_apoyo_'+str(j.id)] = {
+                'id_material_apoyo': j.id,
                 'tipo_material' : j.tipo_material,
                 'ruta_acceso_archivo' : 'http://shm.inf.udec.cl/static/images/'+j.ruta_acceso_archivo
             }
-        res[i.id] = {
+        res['hallazgo_'+str(i.id)] = {
+            'id_hallazgo'       : i.id,
             'id_usuario'        : i.id_usuario,
             'detalle_hallazgo'  : i.detalle_hallazgo,
             'fecha'             : i.fecha,
