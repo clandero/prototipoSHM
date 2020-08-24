@@ -117,7 +117,7 @@ def login():
             return redirect(url_for('views_api.usuario_no_autorizado'))
 
 #Crea nuevos usuarios en la plataforma, requiere de correo (primary_key), nombre, apellido y permisos
-@views_api.route('/signup')
+@views_api.route('/signup', methods=["GET", "POST"])
 def signup():
     if current_user.is_authenticated:
         return redirect(url_for('views_api.usuario_no_autorizado'))
